@@ -3,4 +3,4 @@
 - [x] Vertical graphite sidebar, green MES header, LED clock, sub-header status strip
 - [x] /login brand split-screen with red Dynamo CTA + quick roles; / redirects there
 - [x] /sync adds public Google Sheets link sync alongside CSV upload
-- [ ] Verify build + all screens + theme toggle + sheets-link error handling in browser
+- [x] Verify build + all screens + theme toggle + sheets-link error handling in browser
