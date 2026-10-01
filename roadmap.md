@@ -1,6 +1,5 @@
-- [x] Sync DYNAMO MES design tokens (oklch palette, mes-card, Andon utilities, system fonts)
-- [x] Light Industrial MES default + Dark/Light toggle on header
-- [x] Vertical graphite sidebar, green MES header, LED clock, sub-header status strip
-- [x] /login brand split-screen with red Dynamo CTA + quick roles; / redirects there
-- [x] /sync adds public Google Sheets link sync alongside CSV upload
-- [x] Verify build + all screens + theme toggle + sheets-link error handling in browser
+- [x] Sync DYNAMO MES design tokens, Light/Dark toggle, vertical sidebar, LED clock, /login brand page
+- [x] /sync reads public Google Sheets + CSV, normalizes rows, apply/reset dataset via context + IndexedDB
+- [x] Rename brand to DYNAMO VIETNAM QT - MES across shell, login and route heads
+- [x] Cap /orders list+table and /tracking kanban for 22k-row datasets
+- [ ] Verify full flow in browser: login -> sync live sheet -> apply -> dashboard/orders/tracking load fast
