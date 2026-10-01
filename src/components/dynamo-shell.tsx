@@ -2,10 +2,18 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { Activity, ArrowLeftRight, Boxes, ChevronLeft, ChevronRight, CircleHelp, ClipboardList, DatabaseZap, LayoutDashboard, LogOut, Menu, Moon, Search, ShieldCheck, Sun, X } from 'lucide-react';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { items, type QTItem, type Workshop } from '@/lib/dynamo-data';
+import { items as sampleItems, type QTItem, type Workshop } from '@/lib/dynamo-data';
+import { clearDataset, loadDataset, saveDataset } from '@/lib/dynamo-source';
 
 type Filter = 'Tất cả' | Workshop;
-type AppContextType = { workshop: Filter; setWorkshop: (v: Filter) => void; search: string; setSearch: (v: string) => void; filtered: QTItem[] };
+type AppContextType = {
+  workshop: Filter; setWorkshop: (v: Filter) => void;
+  search: string; setSearch: (v: string) => void;
+  filtered: QTItem[]; dataset: QTItem[];
+  sourceLabel: string; syncedAt: string; isLive: boolean;
+  applyDataset: (rows: QTItem[], label: string) => void;
+  resetDataset: () => void;
+};
 const AppContext = createContext<AppContextType | null>(null);
 export function useDynamo() { const context = useContext(AppContext); if (!context) throw new Error('Dynamo context missing'); return context; }
 const nav: { to: '/dashboard' | '/orders' | '/tracking' | '/audit-costs' | '/materials' | '/sync'; label: string; icon: typeof LayoutDashboard; section?: string }[] = [
@@ -24,6 +32,19 @@ export function DynamoShell({ children }: { children: ReactNode }) {
   const [now, setNow] = useState<Date | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [user, setUser] = useState('Quản lý QT');
+  const [dataset, setDataset] = useState<QTItem[]>(sampleItems);
+  const [sourceLabel, setSourceLabel] = useState('Bộ dữ liệu mẫu');
+  const [syncedAt, setSyncedAt] = useState('');
+  const isLive = sourceLabel !== 'Bộ dữ liệu mẫu';
+  const applyDataset = (rows: QTItem[], label: string) => {
+    const stamp = new Date().toISOString();
+    setDataset(rows); setSourceLabel(label); setSyncedAt(stamp);
+    void saveDataset({ items: rows, label, syncedAt: stamp });
+  };
+  const resetDataset = () => {
+    setDataset(sampleItems); setSourceLabel('Bộ dữ liệu mẫu'); setSyncedAt('');
+    void clearDataset();
+  };
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
@@ -34,6 +55,9 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     setTheme(next);
     document.documentElement.classList.toggle('dark', next === 'dark');
     setUser(window.localStorage.getItem('dynamo-user') ?? 'Quản lý QT');
+    void loadDataset().then(cached => {
+      if (cached?.items?.length) { setDataset(cached.items); setSourceLabel(cached.label); setSyncedAt(cached.syncedAt); }
+    });
     return () => clearInterval(id);
   }, []);
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
@@ -47,11 +71,11 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     window.localStorage.removeItem('dynamo-user');
     navigate({ to: '/login' });
   };
-  const filtered = useMemo(() => items.filter(i => (workshop === 'Tất cả' || i.phong_sx === workshop) && (!search || `${i.So_DatHang} ${i.ma_hang} ${i.ID_Key}`.toLowerCase().includes(search.toLowerCase()))), [workshop, search]);
+  const filtered = useMemo(() => { const q = search.trim().toLowerCase(); return dataset.filter(i => (workshop === 'Tất cả' || i.phong_sx === workshop) && (!q || `${i.So_DatHang} ${i.ma_hang} ${i.ID_Key}`.toLowerCase().includes(q))); }, [dataset, workshop, search]);
   const current = nav.find(n => n.to === location.pathname);
   const dateLabel = now ? now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '--/--/----';
   const timeLabel = now ? now.toLocaleTimeString('vi-VN', { hour12: false }) : '--:--:--';
-  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered }}>
+  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered, dataset, sourceLabel, syncedAt, isLive, applyDataset, resetDataset }}>
     <div className="min-h-screen bg-background text-foreground lg:flex">
       {mobileOpen && <div className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={() => setMobileOpen(false)} />}
       <aside className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-screen ${collapsed ? 'lg:w-[80px]' : 'lg:w-[248px]'} ${mobileOpen ? 'w-[248px] translate-x-0' : 'w-[248px] -translate-x-full lg:translate-x-0'}`}>
