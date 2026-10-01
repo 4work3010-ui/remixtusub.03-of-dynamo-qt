@@ -6,7 +6,7 @@ export type QTItem = {
   so_luong: number; vat_lieu: string; do_cung: string; Kich_Thuoc_SP: string;
   kg_Lot: number; don_vi_tinh: 'Kg' | 'pcs'; don_gia: number; thanh_tien: number;
   ngay_gui_QT: string; cty_QT: Vendor; TrangThai: Status; So_DatHang: string;
-  han_tra: string; ngay_nhan?: string; cong_doan: string;
+  han_tra: string; ngay_nhan?: string | undefined; cong_doan: string;
 };
 const item = (ID_Key: string, phong_sx: Workshop, ma_hang: string, so_luong: number, vat_lieu: string, do_cung: string, Kich_Thuoc_SP: string, kg_Lot: number, don_vi_tinh: 'Kg' | 'pcs', don_gia: number, ngay_gui_QT: string, cty_QT: Vendor, TrangThai: Status, So_DatHang: string, han_tra: string, cong_doan: string, ngay_nhan?: string): QTItem => ({ ID_Key, phong_sx, doi_tuong_hang: phong_sx === 'MOLD' ? 'Khuôn' : 'Linh kiện khuôn', ma_hang, so_luong, vat_lieu, do_cung, Kich_Thuoc_SP, kg_Lot, don_vi_tinh, don_gia, thanh_tien: Math.round((don_vi_tinh === 'Kg' ? kg_Lot : so_luong) * don_gia), ngay_gui_QT, cty_QT, TrangThai, So_DatHang, han_tra, cong_doan, ngay_nhan });
 export const items: QTItem[] = [

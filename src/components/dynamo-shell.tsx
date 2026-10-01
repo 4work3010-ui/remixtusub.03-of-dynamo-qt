@@ -8,7 +8,7 @@ type Filter = 'Tất cả' | Workshop;
 type AppContextType = { workshop: Filter; setWorkshop: (v: Filter) => void; search: string; setSearch: (v: string) => void; filtered: QTItem[] };
 const AppContext = createContext<AppContextType | null>(null);
 export function useDynamo() { const context = useContext(AppContext); if (!context) throw new Error('Dynamo context missing'); return context; }
-const nav = [
+const nav: { to: '/dashboard' | '/orders' | '/tracking' | '/audit-costs' | '/materials' | '/sync'; label: string; icon: typeof LayoutDashboard; section?: string }[] = [
   { to: '/dashboard', label: 'Tổng quan', icon: LayoutDashboard, section: 'ĐIỀU HÀNH' },
   { to: '/orders', label: 'Đơn đặt hàng', icon: ClipboardList },
   { to: '/tracking', label: 'Luân chuyển QT', icon: ArrowLeftRight },
