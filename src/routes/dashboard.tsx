@@ -18,8 +18,8 @@ function Dashboard() {
  return <><PageHeading eyebrow="TRUNG TÂM ĐIỀU HÀNH" title="Tổng quan luân chuyển QT" description={`Theo dõi tiến độ gia công ngoài · ${workshop === 'Tất cả' ? 'Tất cả phân xưởng' : `Phân xưởng ${workshop}`}`} action={<span className="flex items-center gap-2 text-xs text-muted-foreground"><span className="size-2 rounded-full bg-primary"/> Dữ liệu đang hiển thị</span>}/>
  <div className="mb-7 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
   <Kpi icon={<Boxes size={18}/>} label="KHỐI LƯỢNG TẠI VENDOR" value={`${number(vendorData.reduce((a,v)=>a+v.kg,0),1)} kg`} detail={`${number(vendorData.reduce((a,v)=>a+v.pcs,0))} pcs · ${filtered.length} lô gia công`} tone="blue"/>
-  <Kpi icon={<PackageCheck size={18}/>} label="TRẢ HÀNG ĐÚNG HẠN" value={`${completed.length ? Math.round(onTime/completed.length*100) : 0}%`} detail={`${onTime}/${completed.length} lô đã nhập kho đúng hạn`} tone="green"/>
-  <Kpi icon={<CircleAlert size={18}/>} label="CẢNH BÁO QUÁ HẠN" value={`${overdue.filter(i=>new Date().getTime()-new Date(i.han_tra).getTime()>3*86400000).length} lô`} detail={`${overdue.length} lô đang quá hạn tổng cộng`} tone="red"/>
+  <Kpi icon={<PackageCheck size={18}/>} label="TRẢ HÀNG ĐÚNG HẠN" value={`${completed.length ? Math.round(onTime/completed.length*100) : 0}%`} detail={`${number(onTime)}/${number(completed.length)} lô đã nhập kho đúng hạn`} tone="green"/>
+  <Kpi icon={<CircleAlert size={18}/>} label="CẢNH BÁO QUÁ HẠN" value={`${number(overdue.filter(i=>new Date().getTime()-new Date(i.han_tra).getTime()>3*86400000).length)} lô`} detail={`${number(overdue.length)} lô đang quá hạn tổng cộng`} tone="red"/>
   <Kpi icon={<Wallet size={18}/>} label="CHI PHÍ TẠM TÍNH THÁNG" value={money(monthCost)} detail="Theo ngày gửi QT trong tháng hiện tại" tone="amber"/>
  </div>
  <div className="mb-7 grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
