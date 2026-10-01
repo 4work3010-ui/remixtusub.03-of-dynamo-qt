@@ -1,3 +1,6 @@
-- [x] Build shared industrial shell, theme, filters, and representative QT mock data.
-- [x] Build dashboard, orders, tracking, audit costs, materials, and CSV sync screens.
-- [x] Verify navigation and interactions, then apply required package maintenance.
+- [x] Sync DYNAMO MES design tokens (oklch palette, mes-card, Andon utilities, system fonts)
+- [x] Light Industrial MES default + Dark/Light toggle on header
+- [x] Vertical graphite sidebar, green MES header, LED clock, sub-header status strip
+- [x] /login brand split-screen with red Dynamo CTA + quick roles; / redirects there
+- [x] /sync adds public Google Sheets link sync alongside CSV upload
+- [x] Verify build + all screens + theme toggle + sheets-link error handling in browser

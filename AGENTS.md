@@ -11,3 +11,7 @@
 
 - Keep representative QT records and derived calculations in one typed client-side mock dataset; this app is an immediately usable simulation without a connected data service.
 - Keep the shared sidebar, header filters, and search in one root-level shell so every operational screen uses the same current view.
+- Design tokens are the single source in src/styles.css (DYNAMO MES oklch palette, light default + .dark override); components use semantic classes only, never hardcoded colors.
+- Root renders the app shell (sidebar+header) for all routes except /login; fonts are the system Segoe UI/Roboto stack, no remote font links.
+- /login is the brand split-screen entry (DYNAMO VIETNAM MC, red Dynamo CTA, quick-role simulation buttons storing 'dynamo-user'); root / redirects there.
+- /sync accepts CSV files and public Google Sheets share links (regex -> /export?format=csv, gviz fallback); parsing stays client-side and simulation-only.

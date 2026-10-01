@@ -4,14 +4,20 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { DynamoShell } from "../components/dynamo-shell";
+
+// Router expects async (lazy-compatible) error/not-found components.
+function asAsyncRouteComponent<P>(Component: (props: P) => ReactNode) {
+  return lazy(async () => ({ default: Component }));
+}
 
 function NotFoundComponent() {
   return (
@@ -35,12 +41,13 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
+  const message = error instanceof Error ? error.message : String(error);
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+    reportLovableError(message, { boundary: "tanstack_root_error_component" });
+  }, [message]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -91,15 +98,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" },
     ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
+  notFoundComponent: asAsyncRouteComponent(NotFoundComponent),
+  errorComponent: asAsyncRouteComponent(ErrorComponent),
 });
 
 function RootShell({ children }: { children: ReactNode }) {
@@ -118,10 +122,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useLocation().pathname;
 
   return (
     <QueryClientProvider client={queryClient}>
-      <DynamoShell><Outlet /></DynamoShell>
+      {pathname === "/login" ? (
+        <Outlet />
+      ) : (
+        <DynamoShell>
+          <Outlet />
+        </DynamoShell>
+      )}
     </QueryClientProvider>
   );
 }
