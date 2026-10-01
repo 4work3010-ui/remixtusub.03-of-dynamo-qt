@@ -80,9 +80,9 @@ export function DynamoShell({ children }: { children: ReactNode }) {
       {mobileOpen && <div className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={() => setMobileOpen(false)} />}
       <aside className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-screen ${collapsed ? 'lg:w-[80px]' : 'lg:w-[248px]'} ${mobileOpen ? 'w-[248px] translate-x-0' : 'w-[248px] -translate-x-full lg:translate-x-0'}`}>
         <div className="flex h-[72px] items-center justify-between border-b border-sidebar-border px-5">
-          <Link to="/dashboard" className="flex items-center gap-3 overflow-hidden" aria-label="DYNAMO VIETNAM MC — QT Operations">
+          <Link to="/dashboard" className="flex items-center gap-3 overflow-hidden" aria-label="DYNAMO VIETNAM QT - MES">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-dynamo font-display text-lg font-black text-white shadow-[0_0_16px_color-mix(in_oklch,var(--dynamo)_55%,transparent)]">D</span>
-            {!collapsed && <span className="whitespace-nowrap font-display text-base font-extrabold tracking-wide text-sidebar-foreground">DYNAMO VIETNAM MC<span className="mt-0.5 block font-sans text-[9px] font-bold tracking-[.24em] text-sidebar-primary">QT OPERATIONS</span></span>}
+            {!collapsed && <span className="whitespace-nowrap font-display text-base font-extrabold tracking-wide text-sidebar-foreground">DYNAMO VIETNAM QT - MES<span className="mt-0.5 block font-sans text-[9px] font-bold tracking-[.24em] text-sidebar-primary">QT OPERATIONS</span></span>}
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" aria-label="Đóng menu" onClick={() => setMobileOpen(false)}><X /></Button>
         </div>
@@ -95,7 +95,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
         <div className="border-t border-sidebar-border p-3">
           <div className={`mb-3 flex items-center gap-3 px-2 py-2 ${collapsed ? 'lg:justify-center' : ''}`}>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-xs font-bold text-sidebar-primary">QT</span>
-            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className="block text-[10px] text-sidebar-foreground/50">DYNAMO VIETNAM MC</span></span>
+            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className="block text-[10px] text-sidebar-foreground/50">DYNAMO VIETNAM QT - MES</span></span>
           </div>
           <div className={`flex gap-1 ${collapsed ? 'lg:flex-col' : ''}`}>
             <Button variant="ghost" size="icon" className="hidden flex-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:flex" title={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'} aria-label={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'} onClick={() => setCollapsed(v => !v)}>{collapsed ? <ChevronRight /> : <ChevronLeft />}</Button>
@@ -109,7 +109,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="lg:hidden text-primary-foreground hover:bg-white/15" aria-label="Mở menu" onClick={() => setMobileOpen(true)}><Menu /></Button>
             <div className="mr-auto flex min-w-[150px] items-center gap-3">
               <div>
-                <p className="text-[10px] font-bold tracking-[.14em] text-primary-foreground/75">DYNAMO VIETNAM MC — QT</p>
+                <p className="text-[10px] font-bold tracking-[.14em] text-primary-foreground/75">DYNAMO VIETNAM QT - MES</p>
                 <p className="font-display text-sm font-bold leading-tight">{current?.label ?? 'TỔNG QUAN'}</p>
               </div>
             </div>
@@ -129,7 +129,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <main className="mx-auto max-w-[1700px] px-4 pb-14 pt-6 xl:px-6">{children}</main>
-        <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-[11px] text-muted-foreground xl:px-6"><span>© 2026 DYNAMO VIETNAM MC · Hệ thống luân chuyển QT</span><span className="flex items-center gap-1.5"><Activity size={12} className="text-primary" /> Môi trường mô phỏng <CircleHelp size={12} className="ml-2" /></span></footer>
+        <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-[11px] text-muted-foreground xl:px-6"><span>© 2026 DYNAMO VIETNAM QT - MES · Hệ thống luân chuyển QT</span><span className="flex items-center gap-1.5"><Activity size={12} className="text-primary" /> Môi trường mô phỏng <CircleHelp size={12} className="ml-2" /></span></footer>
       </div>
     </div>
   </AppContext.Provider>;

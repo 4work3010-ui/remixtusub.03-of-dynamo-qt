@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { ArrowRight, ClipboardCheck, Factory, Lock, Mail, RefreshCcw, ShieldCheck, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-export const Route = createFileRoute('/login')({ head: () => ({ meta: [{ title: 'Đăng nhập | DYNAMO VIETNAM MC — QT' }, { name: 'description', content: 'Đăng nhập hệ thống điều hành nhà thầu phụ, nhiệt luyện và luân chuyển QT của DYNAMO VIETNAM MC.' }, { property: 'og:title', content: 'Đăng nhập | DYNAMO VIETNAM MC — QT' }, { property: 'og:description', content: 'Điều hành gia công ngoài, nhiệt luyện và luân chuyển QT.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }), component: Login });
+export const Route = createFileRoute('/login')({ head: () => ({ meta: [{ title: 'Đăng nhập | DYNAMO VIETNAM QT - MES' }, { name: 'description', content: 'Đăng nhập hệ thống điều hành nhà thầu phụ, nhiệt luyện và luân chuyển QT của DYNAMO VIETNAM QT - MES.' }, { property: 'og:title', content: 'Đăng nhập | DYNAMO VIETNAM QT - MES' }, { property: 'og:description', content: 'Điều hành gia công ngoài, nhiệt luyện và luân chuyển QT.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }), component: Login });
 const features = [
   { icon: RefreshCcw, title: 'Luân chuyển nhiệt luyện / xi mạ 24/7', desc: 'Theo dõi từng lô từ phân xưởng qua đối tác về nhập kho.' },
   { icon: ShieldCheck, title: 'Kiểm soát trễ hạn đối tác', desc: 'Cảnh báo Andon tức thì cho lô trễ hơn 3 ngày.' },
@@ -34,7 +34,7 @@ function Login() {
         <div className="flex items-center gap-3">
           <span className="flex size-12 items-center justify-center rounded-sm bg-dynamo font-display text-2xl font-black text-white shadow-[0_0_28px_color-mix(in_oklch,var(--dynamo)_60%,transparent)]">D</span>
           <div>
-            <p className="font-display text-lg font-extrabold tracking-wide">DYNAMO VIETNAM MC</p>
+            <p className="font-display text-lg font-extrabold tracking-wide">DYNAMO VIETNAM QT - MES</p>
             <p className="text-[10px] font-bold tracking-[.28em] text-dynamo">QT OPERATIONS SYSTEM</p>
           </div>
         </div>
@@ -47,13 +47,13 @@ function Login() {
           <div><p className="text-sm font-bold">{f.title}</p><p className="mt-1 text-xs text-slate-400">{f.desc}</p></div>
         </div>)}
       </div>
-      <p className="relative flex items-center gap-2 text-[11px] text-slate-500"><Factory size={13} /> DYNAMO VIETNAM MC · Hệ thống mô phỏng nội bộ</p>
+      <p className="relative flex items-center gap-2 text-[11px] text-slate-500"><Factory size={13} /> DYNAMO VIETNAM QT - MES · Hệ thống mô phỏng nội bộ</p>
     </section>
     <section className="flex flex-col justify-center bg-background px-6 py-12 sm:px-14">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 flex items-center gap-3 lg:hidden">
           <span className="flex size-10 items-center justify-center rounded-sm bg-dynamo font-display text-xl font-black text-white">D</span>
-          <div><p className="font-display text-base font-extrabold">DYNAMO VIETNAM MC</p><p className="text-[9px] font-bold tracking-[.24em] text-dynamo">QT OPERATIONS SYSTEM</p></div>
+          <div><p className="font-display text-base font-extrabold">DYNAMO VIETNAM QT - MES</p><p className="text-[9px] font-bold tracking-[.24em] text-dynamo">QT OPERATIONS SYSTEM</p></div>
         </div>
         <h2 className="font-display text-2xl font-bold text-foreground">Đăng nhập hệ thống</h2>
         <p className="mt-2 text-[13px] text-muted-foreground">Truy cập bảng điều hành luân chuyển QT.</p>
