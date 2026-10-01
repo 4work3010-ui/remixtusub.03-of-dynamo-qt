@@ -2,4 +2,4 @@
 - [x] /sync reads public Google Sheets + CSV, normalizes rows, apply/reset dataset via context + IndexedDB
 - [x] Rename brand to DYNAMO VIETNAM QT - MES across shell, login and route heads
 - [x] Cap /orders list+table and /tracking kanban for 22k-row datasets
-- [ ] Verify full flow in browser: login -> sync live sheet -> apply -> dashboard/orders/tracking load fast
+- [x] Verify full flow in browser: login -> sync live sheet -> apply -> dashboard/orders/tracking load fast
