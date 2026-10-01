@@ -123,9 +123,9 @@ export function DynamoShell({ children }: { children: ReactNode }) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5 text-[11px] font-semibold text-muted-foreground xl:px-6">
             <span>TỔNG QUAN QT — PHÂN XƯỞNG: <b className="text-foreground">{workshop === 'Tất cả' ? 'ALL' : workshop}</b></span>
             <span className="hidden sm:inline">·</span>
-            <span className="hidden sm:inline">{filtered.length} lô hiển thị</span>
+            <span className="hidden sm:inline">{filtered.length.toLocaleString('vi-VN')} / {dataset.length.toLocaleString('vi-VN')} dòng</span>
             <span className="hidden md:inline">·</span>
-            <span className="hidden md:inline items-center gap-1.5 md:flex"><span className="size-1.5 rounded-full fx-run-dot" aria-hidden /> Dữ liệu mẫu — tự làm mới khi đồng bộ</span>
+            <span className="hidden md:inline items-center gap-1.5 md:flex"><span className="size-1.5 rounded-full fx-run-dot" aria-hidden /> {isLive ? `${sourceLabel}${syncedAt ? ` · đồng bộ ${new Date(syncedAt).toLocaleString('vi-VN')}` : ''}` : 'Dữ liệu mẫu — nạp dữ liệu thật tại mục Đồng bộ'}</span>
           </div>
         </div>
         <main className="mx-auto max-w-[1700px] px-4 pb-14 pt-6 xl:px-6">{children}</main>
