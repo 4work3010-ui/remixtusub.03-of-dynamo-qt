@@ -1,0 +1,3 @@
+- [ ] Build shared industrial shell, theme, filters, and representative QT mock data.
+- [ ] Build dashboard, orders, tracking, audit costs, materials, and CSV sync screens.
+- [ ] Verify navigation and interactions, then apply required package maintenance.
