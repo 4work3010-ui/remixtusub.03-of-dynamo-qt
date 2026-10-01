@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep representative QT records and derived calculations in one typed client-side mock dataset; this app is an immediately usable simulation without a connected data service.
+- Keep the shared sidebar, header filters, and search in one root-level shell so every operational screen uses the same current view.
