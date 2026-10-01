@@ -2,10 +2,18 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { Activity, ArrowLeftRight, Boxes, ChevronLeft, ChevronRight, CircleHelp, ClipboardList, DatabaseZap, LayoutDashboard, LogOut, Menu, Moon, Search, ShieldCheck, Sun, X } from 'lucide-react';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { items, type QTItem, type Workshop } from '@/lib/dynamo-data';
+import { items as sampleItems, type QTItem, type Workshop } from '@/lib/dynamo-data';
+import { clearDataset, loadDataset, saveDataset } from '@/lib/dynamo-source';
 
 type Filter = 'Tất cả' | Workshop;
-type AppContextType = { workshop: Filter; setWorkshop: (v: Filter) => void; search: string; setSearch: (v: string) => void; filtered: QTItem[] };
+type AppContextType = {
+  workshop: Filter; setWorkshop: (v: Filter) => void;
+  search: string; setSearch: (v: string) => void;
+  filtered: QTItem[]; dataset: QTItem[];
+  sourceLabel: string; syncedAt: string; isLive: boolean;
+  applyDataset: (rows: QTItem[], label: string) => void;
+  resetDataset: () => void;
+};
 const AppContext = createContext<AppContextType | null>(null);
 export function useDynamo() { const context = useContext(AppContext); if (!context) throw new Error('Dynamo context missing'); return context; }
 const nav: { to: '/dashboard' | '/orders' | '/tracking' | '/audit-costs' | '/materials' | '/sync'; label: string; icon: typeof LayoutDashboard; section?: string }[] = [
@@ -24,6 +32,19 @@ export function DynamoShell({ children }: { children: ReactNode }) {
   const [now, setNow] = useState<Date | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [user, setUser] = useState('Quản lý QT');
+  const [dataset, setDataset] = useState<QTItem[]>(sampleItems);
+  const [sourceLabel, setSourceLabel] = useState('Bộ dữ liệu mẫu');
+  const [syncedAt, setSyncedAt] = useState('');
+  const isLive = sourceLabel !== 'Bộ dữ liệu mẫu';
+  const applyDataset = (rows: QTItem[], label: string) => {
+    const stamp = new Date().toISOString();
+    setDataset(rows); setSourceLabel(label); setSyncedAt(stamp);
+    void saveDataset({ items: rows, label, syncedAt: stamp });
+  };
+  const resetDataset = () => {
+    setDataset(sampleItems); setSourceLabel('Bộ dữ liệu mẫu'); setSyncedAt('');
+    void clearDataset();
+  };
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
@@ -34,6 +55,9 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     setTheme(next);
     document.documentElement.classList.toggle('dark', next === 'dark');
     setUser(window.localStorage.getItem('dynamo-user') ?? 'Quản lý QT');
+    void loadDataset().then(cached => {
+      if (cached?.items?.length) { setDataset(cached.items); setSourceLabel(cached.label); setSyncedAt(cached.syncedAt); }
+    });
     return () => clearInterval(id);
   }, []);
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
@@ -47,18 +71,18 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     window.localStorage.removeItem('dynamo-user');
     navigate({ to: '/login' });
   };
-  const filtered = useMemo(() => items.filter(i => (workshop === 'Tất cả' || i.phong_sx === workshop) && (!search || `${i.So_DatHang} ${i.ma_hang} ${i.ID_Key}`.toLowerCase().includes(search.toLowerCase()))), [workshop, search]);
+  const filtered = useMemo(() => { const q = search.trim().toLowerCase(); return dataset.filter(i => (workshop === 'Tất cả' || i.phong_sx === workshop) && (!q || `${i.So_DatHang} ${i.ma_hang} ${i.ID_Key}`.toLowerCase().includes(q))); }, [dataset, workshop, search]);
   const current = nav.find(n => n.to === location.pathname);
   const dateLabel = now ? now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '--/--/----';
   const timeLabel = now ? now.toLocaleTimeString('vi-VN', { hour12: false }) : '--:--:--';
-  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered }}>
+  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered, dataset, sourceLabel, syncedAt, isLive, applyDataset, resetDataset }}>
     <div className="min-h-screen bg-background text-foreground lg:flex">
       {mobileOpen && <div className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={() => setMobileOpen(false)} />}
       <aside className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-screen ${collapsed ? 'lg:w-[80px]' : 'lg:w-[248px]'} ${mobileOpen ? 'w-[248px] translate-x-0' : 'w-[248px] -translate-x-full lg:translate-x-0'}`}>
         <div className="flex h-[72px] items-center justify-between border-b border-sidebar-border px-5">
-          <Link to="/dashboard" className="flex items-center gap-3 overflow-hidden" aria-label="DYNAMO VIETNAM MC — QT Operations">
+          <Link to="/dashboard" className="flex items-center gap-3 overflow-hidden" aria-label="DYNAMO VIETNAM QT - MES">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-dynamo font-display text-lg font-black text-white shadow-[0_0_16px_color-mix(in_oklch,var(--dynamo)_55%,transparent)]">D</span>
-            {!collapsed && <span className="whitespace-nowrap font-display text-base font-extrabold tracking-wide text-sidebar-foreground">DYNAMO VIETNAM MC<span className="mt-0.5 block font-sans text-[9px] font-bold tracking-[.24em] text-sidebar-primary">QT OPERATIONS</span></span>}
+            {!collapsed && <span className="whitespace-nowrap font-display text-base font-extrabold tracking-wide text-sidebar-foreground">DYNAMO VIETNAM QT - MES<span className="mt-0.5 block font-sans text-[9px] font-bold tracking-[.24em] text-sidebar-primary">QT OPERATIONS</span></span>}
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" aria-label="Đóng menu" onClick={() => setMobileOpen(false)}><X /></Button>
         </div>
@@ -71,7 +95,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
         <div className="border-t border-sidebar-border p-3">
           <div className={`mb-3 flex items-center gap-3 px-2 py-2 ${collapsed ? 'lg:justify-center' : ''}`}>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-xs font-bold text-sidebar-primary">QT</span>
-            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className="block text-[10px] text-sidebar-foreground/50">DYNAMO VIETNAM MC</span></span>
+            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className="block text-[10px] text-sidebar-foreground/50">DYNAMO VIETNAM QT - MES</span></span>
           </div>
           <div className={`flex gap-1 ${collapsed ? 'lg:flex-col' : ''}`}>
             <Button variant="ghost" size="icon" className="hidden flex-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:flex" title={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'} aria-label={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'} onClick={() => setCollapsed(v => !v)}>{collapsed ? <ChevronRight /> : <ChevronLeft />}</Button>
@@ -85,7 +109,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="lg:hidden text-primary-foreground hover:bg-white/15" aria-label="Mở menu" onClick={() => setMobileOpen(true)}><Menu /></Button>
             <div className="mr-auto flex min-w-[150px] items-center gap-3">
               <div>
-                <p className="text-[10px] font-bold tracking-[.14em] text-primary-foreground/75">DYNAMO VIETNAM MC — QT</p>
+                <p className="text-[10px] font-bold tracking-[.14em] text-primary-foreground/75">DYNAMO VIETNAM QT - MES</p>
                 <p className="font-display text-sm font-bold leading-tight">{current?.label ?? 'TỔNG QUAN'}</p>
               </div>
             </div>
@@ -99,13 +123,13 @@ export function DynamoShell({ children }: { children: ReactNode }) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5 text-[11px] font-semibold text-muted-foreground xl:px-6">
             <span>TỔNG QUAN QT — PHÂN XƯỞNG: <b className="text-foreground">{workshop === 'Tất cả' ? 'ALL' : workshop}</b></span>
             <span className="hidden sm:inline">·</span>
-            <span className="hidden sm:inline">{filtered.length} lô hiển thị</span>
+            <span className="hidden sm:inline">{filtered.length.toLocaleString('vi-VN')} / {dataset.length.toLocaleString('vi-VN')} dòng</span>
             <span className="hidden md:inline">·</span>
-            <span className="hidden md:inline items-center gap-1.5 md:flex"><span className="size-1.5 rounded-full fx-run-dot" aria-hidden /> Dữ liệu mẫu — tự làm mới khi đồng bộ</span>
+            <span className="hidden md:inline items-center gap-1.5 md:flex"><span className="size-1.5 rounded-full fx-run-dot" aria-hidden /> {isLive ? `${sourceLabel}${syncedAt ? ` · đồng bộ ${new Date(syncedAt).toLocaleString('vi-VN')}` : ''}` : 'Dữ liệu mẫu — nạp dữ liệu thật tại mục Đồng bộ'}</span>
           </div>
         </div>
         <main className="mx-auto max-w-[1700px] px-4 pb-14 pt-6 xl:px-6">{children}</main>
-        <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-[11px] text-muted-foreground xl:px-6"><span>© 2026 DYNAMO VIETNAM MC · Hệ thống luân chuyển QT</span><span className="flex items-center gap-1.5"><Activity size={12} className="text-primary" /> Môi trường mô phỏng <CircleHelp size={12} className="ml-2" /></span></footer>
+        <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-[11px] text-muted-foreground xl:px-6"><span>© 2026 DYNAMO VIETNAM QT - MES · Hệ thống luân chuyển QT</span><span className="flex items-center gap-1.5"><Activity size={12} className="text-primary" /> Môi trường mô phỏng <CircleHelp size={12} className="ml-2" /></span></footer>
       </div>
     </div>
   </AppContext.Provider>;
