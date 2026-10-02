@@ -45,6 +45,7 @@ function Tracking() {
   const [pageSize, setPageSize] = useState(30);
   const [shown, setShown] = useState<Record<string, number>>({});
   const [tablePage, setTablePage] = useState(0);
+  const [range, setRange] = useState<'all' | 'today' | 'week' | 'this' | 'prev' | 'custom'>('all');
 
   const enriched = useMemo(() => filtered.map((row) => ({ row, p: priorityOf(row) })), [filtered]);
 
@@ -121,44 +122,42 @@ function Tracking() {
         }
       />
 
-      <div className="mb-4 space-y-3 border border-border bg-card p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold tracking-wide text-muted-foreground">MỨC ƯU TIÊN</span>
-          {PRIORITIES.map((p) => {
-            const on = picked.includes(p.key);
-            return (
-              <button key={p.key} onClick={() => toggle(p.key)} className={`flex items-center gap-1.5 border px-2.5 py-1.5 text-[11px] font-medium ${on ? p.chip : 'border-border bg-background text-muted-foreground'}`}>
-                <span className={`size-2 rounded-full ${p.dot}`} />{p.label}
-                <b className="ml-1 font-mono">{number(counts[p.key])}</b>
-              </button>
-            );
-          })}
-          {(picked.length > 0 || from || to) && <button onClick={reset} className="flex items-center gap-1 border border-border px-2.5 py-1.5 text-[11px] text-muted-foreground"><X size={12} /> Xóa lọc</button>}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-          <span className="text-[11px] font-bold tracking-wide text-muted-foreground">THỜI GIAN</span>
-          <select value={dateField} onChange={(e) => { setDateField(e.target.value as 'ngay_gui_QT' | 'han_tra'); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1.5 text-[11px]">
-            <option value="ngay_gui_QT">Ngày gửi QT</option>
-            <option value="han_tra">Hạn trả</option>
-          </select>
-          <button onClick={() => shiftMonth(-1)} className="border border-border bg-background p-1.5 text-muted-foreground"><ChevronLeft size={14} /></button>
-          <button onClick={() => shiftMonth(1)} className="border border-border bg-background p-1.5 text-muted-foreground"><ChevronRight size={14} /></button>
-          <input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1.5 text-[11px]" />
-          <span className="text-[11px] text-muted-foreground">→</span>
-          <input type="date" value={to} onChange={(e) => { setTo(e.target.value); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1.5 text-[11px]" />
-          {([['today', 'Hôm nay'], ['week', '7 ngày qua'], ['this', 'Tháng này'], ['prev', 'Tháng trước'], ['all', 'Tất cả']] as const).map(([k, label]) => (
-            <button key={k} onClick={() => preset(k)} className="border border-border bg-background px-2.5 py-1.5 text-[11px] text-muted-foreground">{label}</button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-          <span className="text-[11px] font-bold tracking-wide text-muted-foreground">SỐ LÔ MỖI TRANG</span>
-          {PAGE_SIZES.map((n) => (
-            <button key={n} onClick={() => { setPageSize(n); setShown({}); setTablePage(0); }} className={`border px-2.5 py-1.5 text-[11px] font-semibold ${pageSize === n ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-muted-foreground'}`}>{n}</button>
-          ))}
-          <button onClick={exportCsv} className="ml-auto flex items-center gap-1.5 border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground"><Download size={13} /> Xuất CSV kết quả lọc</button>
-        </div>
+      <div className="mb-4 flex flex-wrap items-center gap-2 border border-border bg-card px-3 py-2">
+        <details className="relative">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium">
+            Mức ưu tiên: <b>{picked.length ? `${picked.length} đã chọn` : 'Tất cả'}</b><ChevronRight size={12} className="rotate-90" />
+          </summary>
+          <div className="absolute left-0 z-30 mt-1 w-60 border border-border bg-popover p-1 shadow-lg">
+            {PRIORITIES.map((p) => (
+              <label key={p.key} className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-[11px] hover:bg-accent">
+                <input type="checkbox" checked={picked.includes(p.key)} onChange={() => toggle(p.key)} />
+                <span className={`size-2 rounded-full ${p.dot}`} />{p.label}<b className="ml-auto font-mono">{number(counts[p.key])}</b>
+              </label>
+            ))}
+          </div>
+        </details>
+        <select value={dateField} onChange={(e) => { setDateField(e.target.value as 'ngay_gui_QT' | 'han_tra'); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1.5 text-[11px]">
+          <option value="ngay_gui_QT">Theo ngày gửi QT</option>
+          <option value="han_tra">Theo hạn trả</option>
+        </select>
+        <select value={range} onChange={(e) => { const v = e.target.value as typeof range; setRange(v); if (v !== 'custom') preset(v); }} className="border border-border bg-background px-2 py-1.5 text-[11px]">
+          <option value="all">Thời gian: Tất cả</option>
+          <option value="today">Hôm nay</option>
+          <option value="week">7 ngày qua</option>
+          <option value="this">Tháng này</option>
+          <option value="prev">Tháng trước</option>
+          <option value="custom">Tùy chọn ngày…</option>
+        </select>
+        {range === 'custom' && (
+          <>
+            <button onClick={() => shiftMonth(-1)} aria-label="Tháng trước" className="border border-border bg-background p-1.5 text-muted-foreground"><ChevronLeft size={14} /></button>
+            <input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1 text-[11px]" />
+            <span className="text-[11px] text-muted-foreground">→</span>
+            <input type="date" value={to} onChange={(e) => { setTo(e.target.value); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1 text-[11px]" />
+            <button onClick={() => shiftMonth(1)} aria-label="Tháng sau" className="border border-border bg-background p-1.5 text-muted-foreground"><ChevronRight size={14} /></button>
+          </>
+        )}
+        {(picked.length > 0 || from || to) && <button onClick={() => { reset(); setRange('all'); }} className="flex items-center gap-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"><X size={12} /> Xóa lọc</button>}
       </div>
 
       <div className="mb-5 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
