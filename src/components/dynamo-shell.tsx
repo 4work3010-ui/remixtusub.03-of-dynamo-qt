@@ -66,10 +66,10 @@ export function DynamoShell({ children }: { children: ReactNode }) {
       if (cached?.items?.length) { setDataset(cached.items); setSourceLabel(cached.label); setSyncedAt(cached.syncedAt); }
     });
     setReady(true);
-    return () => { clearInterval(id); clearTimeout(t); };
+    return () => clearInterval(id);
   }, []);
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
-  useEffect(() => { if (!canAccessRoute(readRole(), location.pathname)) { setTimeout(() => toast.error('Vai trò của bạn không có quyền truy cập trang này.'), 300); navigate({ to: '/dashboard' }); } }, [location.pathname, role]);
+  useEffect(() => { if (!canAccessRoute(readRole(), location.pathname)) { toast.error('Vai trò của bạn không có quyền truy cập trang này.'); navigate({ to: '/dashboard' }); } }, [location.pathname, role]);
   const visibleNav = nav.filter(n => canAccessRoute(role, n.to));
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
