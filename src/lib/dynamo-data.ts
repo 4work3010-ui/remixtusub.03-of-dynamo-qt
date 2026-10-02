@@ -1,3 +1,4 @@
+import { isPricingVisible } from './dynamo-auth';
 export type Workshop = 'PIN' | 'INSERT' | 'MOLD';
 export type Vendor = 'YAMAICHI' | 'PROVISION';
 export type Status = 'Chờ xuất xưởng' | 'Đang tại Vendor' | 'Kiểm tra QC' | 'Đã nhập kho';
