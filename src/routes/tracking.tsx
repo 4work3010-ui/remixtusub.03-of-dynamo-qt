@@ -249,7 +249,13 @@ function Tracking() {
             </table>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-3 text-[11px] text-muted-foreground">
-            <span>Đang xem {number(rows.length ? tablePage * pageSize + 1 : 0)} – {number(Math.min((tablePage + 1) * pageSize, rows.length))} trong {number(rows.length)} lô</span>
+            <span className="flex items-center gap-2">
+              Đang xem {number(rows.length ? tablePage * pageSize + 1 : 0)} – {number(Math.min((tablePage + 1) * pageSize, rows.length))} trong {number(rows.length)} lô
+              <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setTablePage(0); }} className="border border-border bg-background px-2 py-1 text-[11px]">
+                {PAGE_SIZES.map((n) => <option key={n} value={n}>{n} dòng/trang</option>)}
+              </select>
+              <button onClick={exportCsv} className="flex items-center gap-1.5 border border-border bg-background px-2.5 py-1 font-medium"><Download size={13} /> Xuất CSV</button>
+            </span>
             <div className="flex items-center gap-2">
               <button disabled={tablePage === 0} onClick={() => setTablePage((p) => p - 1)} className="border border-border px-2.5 py-1.5 disabled:opacity-40">Trang trước</button>
               <span>Trang {tablePage + 1} / {number(totalPages)}</span>
