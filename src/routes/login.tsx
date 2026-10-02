@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { ArrowRight, ClipboardCheck, Factory, Lock, Mail, RefreshCcw, ShieldCheck, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import logo from '@/assets/dynamo-logo.png';
+import type { Role } from '@/lib/dynamo-auth';
 export const Route = createFileRoute('/login')({ head: () => ({ meta: [{ title: 'Đăng nhập | DYNAMO VIETNAM QT - MES' }, { name: 'description', content: 'Đăng nhập hệ thống điều hành nhà thầu phụ, nhiệt luyện và luân chuyển QT của DYNAMO VIETNAM QT - MES.' }, { property: 'og:title', content: 'Đăng nhập | DYNAMO VIETNAM QT - MES' }, { property: 'og:description', content: 'Điều hành gia công ngoài, nhiệt luyện và luân chuyển QT.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }), component: Login });
 const features = [
   { icon: RefreshCcw, title: 'Luân chuyển nhiệt luyện / xi mạ 24/7', desc: 'Theo dõi từng lô từ phân xưởng qua đối tác về nhập kho.' },
@@ -9,17 +11,18 @@ const features = [
   { icon: TrendingUp, title: 'Đối soát đơn giá tức thì', desc: 'Phát hiện lệch chuẩn theo Vendor × Mác thép × Đơn vị tính.' },
 ];
 const roles = [
-  { label: 'Admin Điều hành', value: 'Admin Điều hành' },
-  { label: 'Leader Phân xưởng', value: 'Leader Phân xưởng' },
-  { label: 'QC Kiểm hàng', value: 'QC Kiểm hàng' },
+  { label: 'Admin Điều hành', value: 'Admin Điều hành', role: 'admin' as Role, desc: 'Toàn quyền & nạp đồng bộ' },
+  { label: 'Leader Phân xưởng', value: 'Leader Phân xưởng', role: 'leader' as Role, desc: 'Đơn hàng, luân chuyển & đối soát chi phí' },
+  { label: 'QC Kiểm hàng', value: 'QC Kiểm hàng', role: 'qc' as Role, desc: 'Giám sát tiến độ, ẩn chi phí' },
 ];
 function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const enter = (role: string) => {
-    window.localStorage.setItem('dynamo-user', role);
+  const enter = (name: string, role: Role = 'admin') => {
+    window.localStorage.setItem('dynamo-user', name);
+    window.localStorage.setItem('dynamo-role', role);
     navigate({ to: '/dashboard' });
   };
   const submit = (e: FormEvent) => {
@@ -32,7 +35,7 @@ function Login() {
       <div className="pointer-events-none absolute -left-24 top-1/3 size-[420px] rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, color-mix(in oklch, var(--dynamo) 60%, transparent), transparent 70%)' }} aria-hidden />
       <div className="relative">
         <div className="flex items-center gap-3">
-          <span className="flex size-12 items-center justify-center rounded-sm bg-dynamo font-display text-2xl font-black text-white shadow-[0_0_28px_color-mix(in_oklch,var(--dynamo)_60%,transparent)]">D</span>
+          <span className="rounded-sm bg-card px-3 py-2 shadow-[0_0_28px_color-mix(in_oklch,var(--dynamo)_45%,transparent)]"><img src={logo} alt="Dynamo Vietnam" className="h-10 w-auto" /></span>
           <div>
             <p className="font-display text-lg font-extrabold tracking-wide">DYNAMO VIETNAM QT - MES</p>
             <p className="text-[10px] font-bold tracking-[.28em] text-dynamo">QT OPERATIONS SYSTEM</p>
@@ -47,12 +50,12 @@ function Login() {
           <div><p className="text-sm font-bold">{f.title}</p><p className="mt-1 text-xs text-slate-400">{f.desc}</p></div>
         </div>)}
       </div>
-      <p className="relative flex items-center gap-2 text-[11px] text-slate-500"><Factory size={13} /> DYNAMO VIETNAM QT - MES · Hệ thống mô phỏng nội bộ</p>
+      <p className="relative flex items-center gap-2 text-[11px] text-slate-500"><Factory size={13} /> DYNAMO VIETNAM CO., LTD. · Hệ thống mô phỏng nội bộ</p>
     </section>
     <section className="flex flex-col justify-center bg-background px-6 py-12 sm:px-14">
       <div className="mx-auto w-full max-w-sm">
+        <img src={logo} alt="Dynamo Vietnam" className="mb-6 h-12 w-auto" />
         <div className="mb-8 flex items-center gap-3 lg:hidden">
-          <span className="flex size-10 items-center justify-center rounded-sm bg-dynamo font-display text-xl font-black text-white">D</span>
           <div><p className="font-display text-base font-extrabold">DYNAMO VIETNAM QT - MES</p><p className="text-[9px] font-bold tracking-[.24em] text-dynamo">QT OPERATIONS SYSTEM</p></div>
         </div>
         <h2 className="font-display text-2xl font-bold text-foreground">Đăng nhập hệ thống</h2>
@@ -71,7 +74,7 @@ function Login() {
         </form>
         <div className="my-7 flex items-center gap-3 text-[11px] font-semibold text-muted-foreground"><span className="h-px flex-1 bg-border" />HOẶC TRUY CẬP NHANH<span className="h-px flex-1 bg-border" /></div>
         <div className="space-y-2">
-          {roles.map(r => <Button key={r.value} variant="outline" onClick={() => enter(r.value)} className="h-11 w-full justify-between rounded-sm text-sm font-semibold"><span className="flex items-center gap-2"><ClipboardCheck size={15} className="text-primary" />{r.label}</span><ArrowRight size={15} className="text-muted-foreground" /></Button>)}
+          {roles.map(r => <Button key={r.value} variant="outline" onClick={() => enter(r.value, r.role)} className="h-auto min-h-11 w-full justify-between rounded-sm py-2 text-sm font-semibold"><span className="flex items-center gap-2 text-left"><ClipboardCheck size={15} className="text-primary" /><span>{r.label}<span className="block text-[10px] font-normal text-muted-foreground">{r.desc}</span></span></span><ArrowRight size={15} className="text-muted-foreground" /></Button>)}
         </div>
         <p className="mt-8 text-center text-[11px] text-muted-foreground">Môi trường mô phỏng — dữ liệu hiển thị là bộ mẫu chuẩn hóa.</p>
       </div>

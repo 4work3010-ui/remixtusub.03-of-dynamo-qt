@@ -24,7 +24,7 @@ export const items: QTItem[] = [
   item('QT-2610-012','MOLD','MD-00624-03',10,'DAC-MAGIC','42–46 HRC','135 × 95 × 55 mm',52.7,'Kg',72000,'2026-09-19','PROVISION','Đang tại Vendor','PO-2609-050','2026-09-26','Nhiệt luyện'),
 ];
 export const statuses: Status[] = ['Chờ xuất xưởng','Đang tại Vendor','Kiểm tra QC','Đã nhập kho'];
-export const money = (value: number) => new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
+export const money = (value: number) => isPricingVisible() ? new Intl.NumberFormat('vi-VN').format(value) + ' ₫' : '*** ₫';
 export const number = (value: number, decimals = 0) => new Intl.NumberFormat('vi-VN', { maximumFractionDigits: decimals }).format(value);
 export const date = (value: string) => new Date(value + 'T00:00:00').toLocaleDateString('vi-VN');
 export const daysLate = (value: string) => Math.max(0, Math.floor((new Date().setHours(0,0,0,0) - new Date(value + 'T00:00:00').getTime()) / 86400000));

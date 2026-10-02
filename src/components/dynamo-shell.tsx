@@ -3,6 +3,9 @@ import { Activity, ArrowLeftRight, Boxes, ChevronLeft, ChevronRight, CircleHelp,
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { items as sampleItems, type QTItem, type Workshop } from '@/lib/dynamo-data';
+import logo from '@/assets/dynamo-logo.png';
+import { canAccessRoute, readRole, ROLE_BADGE, ROLE_LABEL, setPricingVisible, canViewPricing, type Role } from '@/lib/dynamo-auth';
+import { toast } from 'sonner';
 import { clearDataset, loadDataset, saveDataset } from '@/lib/dynamo-source';
 
 type Filter = 'Tất cả' | Workshop;
@@ -12,6 +15,7 @@ type AppContextType = {
   filtered: QTItem[]; dataset: QTItem[];
   sourceLabel: string; syncedAt: string; isLive: boolean;
   applyDataset: (rows: QTItem[], label: string) => void;
+  role: Role;
   resetDataset: () => void;
 };
 const AppContext = createContext<AppContextType | null>(null);
@@ -32,6 +36,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
   const [now, setNow] = useState<Date | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [user, setUser] = useState('Quản lý QT');
+  const [role, setRole] = useState<Role>('admin');
   const [dataset, setDataset] = useState<QTItem[]>(sampleItems);
   const [sourceLabel, setSourceLabel] = useState('Bộ dữ liệu mẫu');
   const [syncedAt, setSyncedAt] = useState('');
@@ -55,12 +60,15 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     setTheme(next);
     document.documentElement.classList.toggle('dark', next === 'dark');
     setUser(window.localStorage.getItem('dynamo-user') ?? 'Quản lý QT');
+    const r = readRole(); setPricingVisible(canViewPricing(r)); setRole(r);
     void loadDataset().then(cached => {
       if (cached?.items?.length) { setDataset(cached.items); setSourceLabel(cached.label); setSyncedAt(cached.syncedAt); }
     });
     return () => clearInterval(id);
   }, []);
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+  useEffect(() => { if (!canAccessRoute(readRole(), location.pathname)) { toast.error('Vai trò của bạn không có quyền truy cập trang này.'); navigate({ to: '/dashboard' }); } }, [location.pathname, role]);
+  const visibleNav = nav.filter(n => canAccessRoute(role, n.to));
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
@@ -68,26 +76,25 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     window.localStorage.setItem('dynamo-theme', next);
   };
   const logout = () => {
-    window.localStorage.removeItem('dynamo-user');
+    window.localStorage.removeItem('dynamo-user'); window.localStorage.removeItem('dynamo-role');
     navigate({ to: '/login' });
   };
   const filtered = useMemo(() => { const q = search.trim().toLowerCase(); return dataset.filter(i => (workshop === 'Tất cả' || i.phong_sx === workshop) && (!q || `${i.So_DatHang} ${i.ma_hang} ${i.ID_Key}`.toLowerCase().includes(q))); }, [dataset, workshop, search]);
   const current = nav.find(n => n.to === location.pathname);
   const dateLabel = now ? now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '--/--/----';
   const timeLabel = now ? now.toLocaleTimeString('vi-VN', { hour12: false }) : '--:--:--';
-  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered, dataset, sourceLabel, syncedAt, isLive, applyDataset, resetDataset }}>
+  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered, dataset, sourceLabel, syncedAt, isLive, applyDataset, resetDataset, role }}>
     <div className="min-h-screen bg-background text-foreground lg:flex">
       {mobileOpen && <div className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={() => setMobileOpen(false)} />}
       <aside className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-screen ${collapsed ? 'lg:w-[80px]' : 'lg:w-[248px]'} ${mobileOpen ? 'w-[248px] translate-x-0' : 'w-[248px] -translate-x-full lg:translate-x-0'}`}>
         <div className="flex h-[72px] items-center justify-between border-b border-sidebar-border px-5">
           <Link to="/dashboard" className="flex items-center gap-3 overflow-hidden" aria-label="DYNAMO VIETNAM QT - MES">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-dynamo font-display text-lg font-black text-white shadow-[0_0_16px_color-mix(in_oklch,var(--dynamo)_55%,transparent)]">D</span>
-            {!collapsed && <span className="whitespace-nowrap font-display text-base font-extrabold tracking-wide text-sidebar-foreground">DYNAMO VIETNAM QT - MES<span className="mt-0.5 block font-sans text-[9px] font-bold tracking-[.24em] text-sidebar-primary">QT OPERATIONS</span></span>}
+            {collapsed ? <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-dynamo font-display text-lg font-black text-white">D</span> : <img src={logo} alt="Dynamo Vietnam" className="h-9 w-auto max-w-[190px] object-contain" />}
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" aria-label="Đóng menu" onClick={() => setMobileOpen(false)}><X /></Button>
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-5">
-          {nav.map((n, index) => <div key={n.to}>
+          {visibleNav.map((n, index) => <div key={n.to}>
             {n.section && <p className={`mb-2 mt-5 px-3 text-[10px] font-bold tracking-[.16em] text-sidebar-foreground/50 ${index === 0 ? '!mt-0' : ''} ${collapsed ? 'lg:text-center lg:px-0' : ''}`}>{collapsed ? <span className="lg:hidden">{n.section}</span> : n.section}</p>}
             <Link to={n.to} title={collapsed ? n.label : undefined} className={`mb-1 flex h-10 items-center gap-3 rounded-sm px-3 text-[12px] font-bold tracking-wide transition-colors ${location.pathname === n.to ? 'bg-sidebar-primary/20 text-sidebar-primary shadow-[inset_2px_0_0_var(--sidebar-primary)]' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}><n.icon size={16} className="shrink-0" /><span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{n.label}</span></Link>
           </div>)}
@@ -95,8 +102,9 @@ export function DynamoShell({ children }: { children: ReactNode }) {
         <div className="border-t border-sidebar-border p-3">
           <div className={`mb-3 flex items-center gap-3 px-2 py-2 ${collapsed ? 'lg:justify-center' : ''}`}>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-xs font-bold text-sidebar-primary">QT</span>
-            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className="block text-[10px] text-sidebar-foreground/50">DYNAMO VIETNAM QT - MES</span></span>
+            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className={`mt-0.5 inline-block rounded-sm px-1.5 py-0.5 text-[9px] font-bold tracking-wide ${ROLE_BADGE[role]}`}>{ROLE_LABEL[role].toUpperCase()}</span></span>
           </div>
+          <p className={`mb-2 px-2 text-[9px] font-bold leading-snug tracking-[.12em] text-sidebar-foreground/45 ${collapsed ? 'lg:hidden' : ''}`}>DYNAMO VIETNAM CO., LTD.<span className="block font-medium tracking-normal">QT Operations System</span></p>
           <div className={`flex gap-1 ${collapsed ? 'lg:flex-col' : ''}`}>
             <Button variant="ghost" size="icon" className="hidden flex-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:flex" title={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'} aria-label={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'} onClick={() => setCollapsed(v => !v)}>{collapsed ? <ChevronRight /> : <ChevronLeft />}</Button>
             <Button variant="ghost" size="icon" className="w-full text-sidebar-foreground/60 hover:bg-destructive/20 hover:text-destructive" title="Đăng xuất" aria-label="Đăng xuất" onClick={logout}><LogOut size={16} /></Button>
