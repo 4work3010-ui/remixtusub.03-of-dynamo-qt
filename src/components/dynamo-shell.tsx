@@ -67,7 +67,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     });
     setReady(true);
     const t = setTimeout(() => toast.info('PROBE: shell mounted'), 300);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); clearTimeout(t); };
   }, []);
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
   useEffect(() => { if (!canAccessRoute(readRole(), location.pathname)) { setTimeout(() => toast.error('Vai trò của bạn không có quyền truy cập trang này.'), 300); navigate({ to: '/dashboard' }); } }, [location.pathname, role]);
