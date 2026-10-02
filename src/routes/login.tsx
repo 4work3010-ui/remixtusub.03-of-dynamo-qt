@@ -1,34 +1,30 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
-import { ArrowRight, ClipboardCheck, Factory, Lock, Mail, RefreshCcw, ShieldCheck, TrendingUp } from 'lucide-react';
+import { ArrowRight, Factory, KeyRound, Loader2, RefreshCcw, ShieldCheck, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/dynamo-logo.png';
-import type { Role } from '@/lib/dynamo-auth';
+import { verifyCode } from '@/lib/dynamo-auth';
 export const Route = createFileRoute('/login')({ head: () => ({ meta: [{ title: 'Đăng nhập | DYNAMO VIETNAM QT - MES' }, { name: 'description', content: 'Đăng nhập hệ thống điều hành nhà thầu phụ, nhiệt luyện và luân chuyển QT của DYNAMO VIETNAM QT - MES.' }, { property: 'og:title', content: 'Đăng nhập | DYNAMO VIETNAM QT - MES' }, { property: 'og:description', content: 'Điều hành gia công ngoài, nhiệt luyện và luân chuyển QT.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }), component: Login });
 const features = [
   { icon: RefreshCcw, title: 'Luân chuyển nhiệt luyện / xi mạ 24/7', desc: 'Theo dõi từng lô từ phân xưởng qua đối tác về nhập kho.' },
   { icon: ShieldCheck, title: 'Kiểm soát trễ hạn đối tác', desc: 'Cảnh báo Andon tức thì cho lô trễ hơn 3 ngày.' },
   { icon: TrendingUp, title: 'Đối soát đơn giá tức thì', desc: 'Phát hiện lệch chuẩn theo Vendor × Mác thép × Đơn vị tính.' },
 ];
-const roles = [
-  { label: 'Admin Điều hành', value: 'Admin Điều hành', role: 'admin' as Role, desc: 'Toàn quyền & nạp đồng bộ' },
-  { label: 'Leader Phân xưởng', value: 'Leader Phân xưởng', role: 'leader' as Role, desc: 'Đơn hàng, luân chuyển & đối soát chi phí' },
-  { label: 'QC Kiểm hàng', value: 'QC Kiểm hàng', role: 'qc' as Role, desc: 'Giám sát tiến độ, ẩn chi phí' },
-];
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
-  const enter = (name: string, role: Role = 'admin') => {
-    window.localStorage.setItem('dynamo-user', name);
-    window.localStorage.setItem('dynamo-role', role);
-    navigate({ to: '/dashboard' });
-  };
-  const submit = (e: FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { setError('Vui lòng nhập email và mật khẩu.'); return; }
-    enter(email.split('@')[0] || 'Quản lý QT');
+    if (!code.trim()) { setError('Vui lòng nhập mã xác nhận do Admin cấp.'); return; }
+    setBusy(true);
+    const entry = await verifyCode(code);
+    setBusy(false);
+    if (!entry) { setError('Mã xác nhận không hợp lệ hoặc chưa được kích hoạt. Vui lòng liên hệ Admin hệ thống DYNAMO để được cấp quyền.'); return; }
+    window.localStorage.setItem('dynamo-user', entry.note || entry.role);
+    window.localStorage.setItem('dynamo-role', entry.role);
+    navigate({ to: '/dashboard' });
   };
   return <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
     <section className="relative hidden flex-col justify-between overflow-hidden bg-graphite p-10 text-slate-100 lg:flex">
@@ -59,23 +55,16 @@ function Login() {
           <div><p className="font-display text-base font-extrabold">DYNAMO VIETNAM QT - MES</p><p className="text-[9px] font-bold tracking-[.24em] text-dynamo">QT OPERATIONS SYSTEM</p></div>
         </div>
         <h2 className="font-display text-2xl font-bold text-foreground">Đăng nhập hệ thống</h2>
-        <p className="mt-2 text-[13px] text-muted-foreground">Truy cập bảng điều hành luân chuyển QT.</p>
+        <p className="mt-2 text-[13px] text-muted-foreground">Nhập mã xác nhận do Admin cấp để truy cập theo đúng quyền của bạn.</p>
         <form onSubmit={submit} className="mt-8 space-y-4">
           <label className="block">
-            <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-muted-foreground">EMAIL</span>
-            <div className="relative"><Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(''); }} placeholder="ten@dynamovn.vn" aria-label="Email" className="h-11 w-full rounded-sm border border-input bg-card pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-primary" /></div>
-          </label>
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-muted-foreground">MẬT KHẨU</span>
-            <div className="relative"><Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(''); }} placeholder="••••••••" aria-label="Mật khẩu" className="h-11 w-full rounded-sm border border-input bg-card pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-primary" /></div>
+            <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-muted-foreground">MÃ XÁC NHẬN</span>
+            <div className="relative"><KeyRound size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="password" autoComplete="off" spellCheck={false} value={code} onChange={e => { setCode(e.target.value); setError(''); }} placeholder="Nhập mã xác nhận" aria-label="Mã xác nhận" className="h-11 w-full rounded-sm border border-input bg-card pl-9 pr-3 font-mono text-sm text-foreground outline-none placeholder:font-sans placeholder:text-muted-foreground/60 focus:border-primary" /></div>
           </label>
           {error && <p role="alert" className="border border-destructive/30 bg-destructive/10 p-2.5 text-xs font-semibold text-destructive">{error}</p>}
-          <Button type="submit" className="h-11 w-full rounded-sm bg-dynamo font-display text-sm font-bold tracking-widest text-white hover:bg-dynamo/90">ĐĂNG NHẬP DYNAMO <ArrowRight size={16} /></Button>
+          <Button type="submit" disabled={busy} className="h-11 w-full rounded-sm bg-dynamo font-display text-sm font-bold tracking-widest text-white hover:bg-dynamo/90">{busy ? <><Loader2 size={16} className="animate-spin" /> ĐANG XÁC THỰC…</> : <>XÁC THỰC & ĐĂNG NHẬP <ArrowRight size={16} /></>}</Button>
         </form>
-        <div className="my-7 flex items-center gap-3 text-[11px] font-semibold text-muted-foreground"><span className="h-px flex-1 bg-border" />HOẶC TRUY CẬP NHANH<span className="h-px flex-1 bg-border" /></div>
-        <div className="space-y-2">
-          {roles.map(r => <Button key={r.value} variant="outline" onClick={() => enter(r.value, r.role)} className="h-auto min-h-11 w-full justify-between rounded-sm py-2 text-sm font-semibold"><span className="flex items-center gap-2 text-left"><ClipboardCheck size={15} className="text-primary" /><span>{r.label}<span className="block text-[10px] font-normal text-muted-foreground">{r.desc}</span></span></span><ArrowRight size={15} className="text-muted-foreground" /></Button>)}
-        </div>
+        <p className="mt-6 flex items-start gap-2 border border-border bg-card p-3 text-[11px] text-muted-foreground"><ShieldCheck size={14} className="mt-0.5 shrink-0 text-primary" />Chưa có mã? Vui lòng liên hệ Admin hệ thống DYNAMO để được cấp quyền truy cập.</p>
         <p className="mt-8 text-center text-[11px] text-muted-foreground">Môi trường mô phỏng — dữ liệu hiển thị là bộ mẫu chuẩn hóa.</p>
       </div>
     </section>

@@ -15,5 +15,5 @@
 - Root renders the app shell (sidebar+header) for all routes except /login; fonts are the system Segoe UI/Roboto stack, no remote font links.
 - /login is the brand split-screen entry (DYNAMO VIETNAM MC, red Dynamo CTA, quick-role simulation buttons storing 'dynamo-user'); root / redirects there.
 - /sync accepts CSV files and public Google Sheets share links (regex -> /export?format=csv, gviz fallback); parsing stays client-side and simulation-only.
-- RBAC is client-side simulation only (localStorage 'dynamo-role': admin full; leader blocked from /sync; qc blocked from /sync + /audit-costs and sees masked prices); not real security.
+- RBAC is client-side simulation only: /login verifies a ULID code against the AUTH_CONFIG sheet tab (vai_tro, ma_code, ghi_chu; 'qc' normalized to 'viewer'; qt_<vendor> = partner scoped to cty_QT in the shell); roles admin/leader/viewer/qt_* gate routes and prices in dynamo-auth.ts. Not real security — codes are visible in a public sheet.
 - Mount <Toaster> as the first child of <body> in __root before children; toasts fired during shell-hydration effects are silently dropped when Toaster hydrates after the shell.

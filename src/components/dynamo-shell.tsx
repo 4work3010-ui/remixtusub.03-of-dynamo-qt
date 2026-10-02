@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { Button } from '@/components/ui/button';
 import { items as sampleItems, type QTItem, type Workshop } from '@/lib/dynamo-data';
 import logo from '@/assets/dynamo-logo.png';
-import { canAccessRoute, readRole, ROLE_BADGE, ROLE_LABEL, setPricingVisible, canViewPricing, type Role } from '@/lib/dynamo-auth';
+import { canAccessRoute, readRole, roleBadge, roleLabel, setPricingVisible, canViewPricing, getVendorScope, type Role } from '@/lib/dynamo-auth';
 import { toast } from 'sonner';
 import { clearDataset, loadDataset, saveDataset } from '@/lib/dynamo-source';
 
@@ -38,7 +38,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
   const [user, setUser] = useState('Quản lý QT');
   const [role, setRole] = useState<Role>('admin');
   const [ready, setReady] = useState(false);
-  const [dataset, setDataset] = useState<QTItem[]>(sampleItems);
+  const [rawDataset, setDataset] = useState<QTItem[]>(sampleItems);
   const [sourceLabel, setSourceLabel] = useState('Bộ dữ liệu mẫu');
   const [syncedAt, setSyncedAt] = useState('');
   const isLive = sourceLabel !== 'Bộ dữ liệu mẫu';
@@ -81,7 +81,10 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     window.localStorage.removeItem('dynamo-user'); window.localStorage.removeItem('dynamo-role');
     navigate({ to: '/login' });
   };
-  const filtered = useMemo(() => { const q = search.trim().toLowerCase(); return dataset.filter(i => (workshop === 'Tất cả' || i.phong_sx === workshop) && (!q || `${i.So_DatHang} ${i.ma_hang} ${i.ID_Key}`.toLowerCase().includes(q))); }, [dataset, workshop, search]);
+  const vendor = getVendorScope(role);
+  const scoped = useMemo(() => vendor ? rawDataset.filter(i => String(i.cty_QT).toUpperCase() === vendor) : rawDataset, [rawDataset, vendor]);
+  const dataset = scoped;
+  const filtered = useMemo(() => { const q = search.trim().toLowerCase(); return scoped.filter(i => (workshop === 'Tất cả' || i.phong_sx === workshop) && (!q || `${i.So_DatHang} ${i.ma_hang} ${i.ID_Key}`.toLowerCase().includes(q))); }, [scoped, workshop, search]);
   const current = nav.find(n => n.to === location.pathname);
   const dateLabel = now ? now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '--/--/----';
   const timeLabel = now ? now.toLocaleTimeString('vi-VN', { hour12: false }) : '--:--:--';
@@ -104,7 +107,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
         <div className="border-t border-sidebar-border p-3">
           <div className={`mb-3 flex items-center gap-3 px-2 py-2 ${collapsed ? 'lg:justify-center' : ''}`}>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-xs font-bold text-sidebar-primary">QT</span>
-            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className={`mt-0.5 inline-block rounded-sm px-1.5 py-0.5 text-[9px] font-bold tracking-wide ${ROLE_BADGE[role]}`}>{ROLE_LABEL[role].toUpperCase()}</span></span>
+            <span className={collapsed ? 'lg:hidden' : ''}><span className="block text-xs font-bold">{user}</span><span className={`mt-0.5 inline-block rounded-sm px-1.5 py-0.5 text-[9px] font-bold tracking-wide ${roleBadge(role)}`}>{roleLabel(role).toUpperCase()}</span></span>
           </div>
           <p className={`mb-2 px-2 text-[9px] font-bold leading-snug tracking-[.12em] text-sidebar-foreground/45 ${collapsed ? 'lg:hidden' : ''}`}>DYNAMO VIETNAM CO., LTD.<span className="block font-medium tracking-normal">QT Operations System</span></p>
           <div className={`flex gap-1 ${collapsed ? 'lg:flex-col' : ''}`}>
