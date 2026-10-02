@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight, CircleAlert, Download, GanttChart, PackageOpen, Table2, X } from 'lucide-react';
 import { PageHeading, useDynamo } from '@/components/dynamo-shell';
-import { date, daysLate, isLate, money, number, type QTItem } from '@/lib/dynamo-data';
+import { date, daysLate, isLate, money, number, statuses, type QTItem } from '@/lib/dynamo-data';
 
 export const Route = createFileRoute('/tracking')({
   head: () => ({ meta: [{ title: 'Luân chuyển QT | DYNAMO VIETNAM QT - MES' }, { name: 'description', content: 'Timeline giám sát lô gia công theo đơn hàng từ xuất xưởng đến nhập kho.' }, { property: 'og:title', content: 'Luân chuyển QT | DYNAMO VIETNAM QT - MES' }, { property: 'og:description', content: 'Theo dõi tiến độ và cảnh báo quá hạn gia công ngoài.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
@@ -172,7 +172,7 @@ function Tracking() {
       {view === 'timeline' ? (() => {
         const groups: { id: string; lots: QTItem[] }[] = [];
         const idx = new Map<string, number>();
-        for (const r of rows) { const k = idx.get(r.So_DatHang); if (k === undefined) { idx.set(r.So_DatHang, groups.length); groups.push({ id: r.So_DatHang, lots: [r] }); } else groups[k].lots.push(r); }
+        for (const r of rows) { const k = idx.get(r.So_DatHang); if (k === undefined) { idx.set(r.So_DatHang, groups.length); groups.push({ id: r.So_DatHang, lots: [r] }); } else groups[k]!.lots.push(r); }
         const visible = groups.slice(0, orderLimit);
         const today = ymd(new Date());
         let min = today, max = today;
@@ -193,7 +193,7 @@ function Tracking() {
               return (
                 <div key={g.id} className="border-b border-border">
                   <button onClick={() => setCollapsed((c) => ({ ...c, [g.id]: open }))} className="grid w-full grid-cols-[minmax(220px,300px)_1fr] bg-secondary/40 text-left hover:bg-secondary">
-                    <span className="flex items-center gap-2 px-3 py-2"><ChevronRight size={13} className={`transition-transform ${open ? 'rotate-90' : ''}`} /><b className="font-mono text-xs text-primary">{g.id}</b><span className="text-[10px] text-muted-foreground">{g.lots.length} lô · {g.lots[0].cty_QT}</span></span>
+                    <span className="flex items-center gap-2 px-3 py-2"><ChevronRight size={13} className={`transition-transform ${open ? 'rotate-90' : ''}`} /><b className="font-mono text-xs text-primary">{g.id}</b><span className="text-[10px] text-muted-foreground">{g.lots.length} lô · {g.lots[0]?.cty_QT}</span></span>
                     <span className="flex items-center px-3 text-[10px] text-muted-foreground">{late > 0 && <b className="text-destructive">{late} lô trễ hạn</b>}</span>
                   </button>
                   {open && g.lots.slice(0, 50).map((l) => {
