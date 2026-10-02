@@ -66,6 +66,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
       if (cached?.items?.length) { setDataset(cached.items); setSourceLabel(cached.label); setSyncedAt(cached.syncedAt); }
     });
     setReady(true);
+    toast.info('PROBE: shell mounted');
     return () => clearInterval(id);
   }, []);
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
