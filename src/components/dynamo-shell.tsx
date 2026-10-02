@@ -37,6 +37,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [user, setUser] = useState('Quản lý QT');
   const [role, setRole] = useState<Role>('admin');
+  const [ready, setReady] = useState(false);
   const [dataset, setDataset] = useState<QTItem[]>(sampleItems);
   const [sourceLabel, setSourceLabel] = useState('Bộ dữ liệu mẫu');
   const [syncedAt, setSyncedAt] = useState('');
@@ -64,6 +65,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     void loadDataset().then(cached => {
       if (cached?.items?.length) { setDataset(cached.items); setSourceLabel(cached.label); setSyncedAt(cached.syncedAt); }
     });
+    setReady(true);
     return () => clearInterval(id);
   }, []);
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
@@ -136,7 +138,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
             <span className="hidden md:inline items-center gap-1.5 md:flex"><span className="size-1.5 rounded-full fx-run-dot" aria-hidden /> {isLive ? `${sourceLabel}${syncedAt ? ` · đồng bộ ${new Date(syncedAt).toLocaleString('vi-VN')}` : ''}` : 'Dữ liệu mẫu — nạp dữ liệu thật tại mục Đồng bộ'}</span>
           </div>
         </div>
-        <main className="mx-auto max-w-[1700px] px-4 pb-14 pt-6 xl:px-6">{children}</main>
+        <main className="mx-auto max-w-[1700px] px-4 pb-14 pt-6 xl:px-6">{ready ? children : <div className="min-h-[400px] text-sm text-muted-foreground">Đang tải dữ liệu phân quyền…</div>}</main>
         <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-[11px] text-muted-foreground xl:px-6"><span>© 2026 DYNAMO VIETNAM QT - MES · Hệ thống luân chuyển QT</span><span className="flex items-center gap-1.5"><Activity size={12} className="text-primary" /> Môi trường mô phỏng <CircleHelp size={12} className="ml-2" /></span></footer>
       </div>
     </div>
