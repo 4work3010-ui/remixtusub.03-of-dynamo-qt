@@ -38,7 +38,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
   const [user, setUser] = useState('Quản lý QT');
   const [role, setRole] = useState<Role>('admin');
   const [ready, setReady] = useState(false);
-  const [dataset, setDataset] = useState<QTItem[]>(sampleItems);
+  const [rawDataset, setDataset] = useState<QTItem[]>(sampleItems);
   const [sourceLabel, setSourceLabel] = useState('Bộ dữ liệu mẫu');
   const [syncedAt, setSyncedAt] = useState('');
   const isLive = sourceLabel !== 'Bộ dữ liệu mẫu';
