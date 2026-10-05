@@ -57,6 +57,7 @@ function Sync() {
   const byWorkshop = (['PIN', 'INSERT', 'MOLD'] as const).map(w => ({ w, n: rows.filter(i => i.phong_sx === w).length }));
 
   return <><PageHeading eyebrow="HỆ THỐNG / DỮ LIỆU" title="Đồng bộ dữ liệu QT" description="Nạp dữ liệu thật từ Google Sheets công khai hoặc tệp CSV rồi áp dụng cho toàn bộ hệ thống." action={<span className="flex items-center gap-2 border border-border bg-card px-3 py-2 text-xs"><DatabaseZap size={14} className="text-primary" /> Nguồn hiện tại: <b>{sourceLabel}</b> · {dataset.length.toLocaleString('vi-VN')} dòng</span>} />
+  <WebhookConfig />
     <div className="grid gap-5 xl:grid-cols-2">
       <section className="mes-card p-6">
         <div className="mb-5 flex items-center gap-3">
