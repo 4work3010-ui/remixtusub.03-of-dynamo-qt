@@ -1,8 +1,8 @@
+import { verifyAccessCode } from './auth.functions';
 // Client-side role simulation (no backend). Not real security — UI gating only.
 // Roles: admin | leader | viewer | qt_<vendor> (partner, scoped to cty_QT = VENDOR).
 export type Role = 'admin' | 'leader' | 'viewer' | `qt_${string}`;
 
-export const AUTH_CONFIG_URL = 'https://docs.google.com/spreadsheets/d/1cC9VnRrjf3IgADbzYL1VulrqgcSf2h56XkXEJILdyuE/export?format=csv&gid=1278143039';
 
 export const getVendorScope = (role: Role): string | null => role.startsWith('qt_') ? role.slice(3).toUpperCase() : null;
 
@@ -38,30 +38,14 @@ let pricingVisible = true;
 export const setPricingVisible = (v: boolean) => { pricingVisible = v; };
 export const isPricingVisible = () => pricingVisible;
 
-type AuthEntry = { role: Role; code: string; note: string };
-const parseCsv = (text: string): AuthEntry[] => {
-  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
-  const head = (lines[0] ?? '').split(',').map(h => h.trim().toLowerCase());
-  const iRole = head.indexOf('vai_tro'), iCode = head.indexOf('ma_code'), iNote = head.indexOf('ghi_chu');
-  return lines.slice(1).map(l => {
-    const c = l.match(/("([^"]|"")*"|[^,]*)(,|$)/g)?.map(x => x.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim()) ?? [];
-    const role = normalizeRole(c[iRole] ?? '');
-    return role && c[iCode] ? { role, code: c[iCode]!, note: c[iNote] ?? '' } : null;
-  }).filter((x): x is AuthEntry => !!x);
-};
+type AuthEntry = { role: Role; note: string };
 
-/** Verify a ULID code against the AUTH_CONFIG sheet (cached copy used when offline). */
+/** Verify a ULID code on the server (the code list is never sent to the browser). */
 export async function verifyCode(code: string): Promise<AuthEntry | null> {
-  const needle = code.trim().toLowerCase();
-  if (!needle) return null;
-  let entries: AuthEntry[] = [];
-  try {
-    const res = await fetch(`${AUTH_CONFIG_URL}&t=${Date.now()}`);
-    if (!res.ok) throw new Error(String(res.status));
-    entries = parseCsv(await res.text());
-    window.localStorage.setItem('dynamo-auth-config', JSON.stringify(entries));
-  } catch {
-    try { entries = JSON.parse(window.localStorage.getItem('dynamo-auth-config') ?? '[]'); } catch { entries = []; }
-  }
-  return entries.find(e => e.code.toLowerCase() === needle) ?? null;
+  if (!code.trim()) return null;
+
+  const res = await verifyAccessCode({ data: { code } });
+  if (!res.ok) return null;
+  const role = normalizeRole(res.role);
+  return role ? { role, note: res.note } : null;
 }
