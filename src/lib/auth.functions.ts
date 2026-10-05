@@ -26,12 +26,13 @@ export const updateLotProgress = createServerFn({ method: 'POST' })
     if (!vendor && auth.role !== 'admin') return { ok: false as const, error: 'Vai trò không có quyền cập nhật.' };
     if (vendor && vendor !== data.cty_QT) return { ok: false as const, error: 'Lô hàng không thuộc đơn vị của bạn.' };
     if (!data.ID_Key) return { ok: false as const, error: 'Thiếu ID_Key.' };
-    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(data.webhook)) return { ok: false as const, error: 'Chưa cấu hình link Apps Script Webhook (trang Đồng bộ).' };
+    const hook = data.webhook || process.env['APPS_SCRIPT_WEBHOOK_URL'] || '';
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(hook)) return { ok: false as const, error: 'Chưa cấu hình link Apps Script Webhook (trang Đồng bộ).' };
     const allowed = EDITABLE[vendor ? 'vendor' : 'admin'] ?? [];
     const updates = Object.fromEntries(Object.entries(data.updates).filter(([k]) => allowed.includes(k)));
     if (!Object.keys(updates).length) return { ok: false as const, error: 'Không có trường hợp lệ để cập nhật.' };
     try {
-      const res = await fetch(data.webhook, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ ID_Key: data.ID_Key, updates, vendor: vendor ?? 'ADMIN' }), redirect: 'follow' });
+      const res = await fetch(hook, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ ID_Key: data.ID_Key, updates, vendor: vendor ?? 'ADMIN' }), redirect: 'follow' });
       const text = await res.text();
       if (!res.ok) { console.error(`Webhook failed [${res.status}]: ${text}`); return { ok: false as const, error: `Webhook lỗi [${res.status}]` }; }
       let body: { ok?: boolean; error?: string } = {};
