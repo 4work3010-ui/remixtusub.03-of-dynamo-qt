@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, DatabaseZap, FileSpreadsheet, Info, Link2, Loader2, RotateCcw, UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeading, useDynamo } from '@/components/dynamo-shell';
+import { WebhookConfig } from '@/components/webhook-config';
 import { items as sampleItems, money, number, type QTItem } from '@/lib/dynamo-data';
 import { SHEET_URL, fetchSheetItems, mapRows, parseCsvRows } from '@/lib/dynamo-source';
 

@@ -24,6 +24,7 @@ function Login() {
     if (!entry) { setError('Mã xác nhận không hợp lệ hoặc chưa được kích hoạt. Vui lòng liên hệ Admin hệ thống DYNAMO để được cấp quyền.'); return; }
     window.localStorage.setItem('dynamo-user', entry.note || entry.role);
     window.localStorage.setItem('dynamo-role', entry.role);
+    window.localStorage.setItem('dynamo-code', code.trim());
     navigate({ to: '/dashboard' });
   };
   return <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">

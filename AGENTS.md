@@ -17,3 +17,4 @@
 - /sync accepts CSV files and public Google Sheets share links (regex -> /export?format=csv, gviz fallback); parsing stays client-side and simulation-only.
 - ULID login is verified server-side (createServerFn in src/lib/auth.functions.ts) so the AUTH_CONFIG URL and code list never reach the browser; route/price/vendor gating after login stays client-side (role in localStorage).
 - Mount <Toaster> as the first child of <body> in __root before children; toasts fired during shell-hydration effects are silently dropped when Toaster hydrates after the shell.
+- Vendor write-back: updateLotProgress server fn re-verifies the ULID (stored as dynamo-code) and whitelists fields before posting to the Apps Script webhook; whitelist lives in auth.functions.ts so admins can open more columns in one place.
