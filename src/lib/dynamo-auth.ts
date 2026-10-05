@@ -1,3 +1,4 @@
+import { verifyAccessCode } from './auth.functions';
 // Client-side role simulation (no backend). Not real security — UI gating only.
 // Roles: admin | leader | viewer | qt_<vendor> (partner, scoped to cty_QT = VENDOR).
 export type Role = 'admin' | 'leader' | 'viewer' | `qt_${string}`;
@@ -42,7 +43,7 @@ type AuthEntry = { role: Role; note: string };
 /** Verify a ULID code on the server (the code list is never sent to the browser). */
 export async function verifyCode(code: string): Promise<AuthEntry | null> {
   if (!code.trim()) return null;
-  const { verifyAccessCode } = await import('./auth.functions');
+
   const res = await verifyAccessCode({ data: { code } });
   if (!res.ok) return null;
   const role = normalizeRole(res.role);
