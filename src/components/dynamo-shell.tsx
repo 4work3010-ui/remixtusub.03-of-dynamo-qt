@@ -17,6 +17,7 @@ type AppContextType = {
   applyDataset: (rows: QTItem[], label: string) => void;
   role: Role;
   resetDataset: () => void;
+  updateItem: (id: string, patch: Partial<QTItem>) => void;
 };
 const AppContext = createContext<AppContextType | null>(null);
 export function useDynamo() { const context = useContext(AppContext); if (!context) throw new Error('Dynamo context missing'); return context; }
@@ -47,6 +48,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     setDataset(rows); setSourceLabel(label); setSyncedAt(stamp);
     void saveDataset({ items: rows, label, syncedAt: stamp });
   };
+  const updateItem = (id: string, patch: Partial<QTItem>) => setDataset(prev => { const next = prev.map(i => i.ID_Key === id ? { ...i, ...patch } : i); void saveDataset({ items: next, label: sourceLabel, syncedAt }); return next; });
   const resetDataset = () => {
     setDataset(sampleItems); setSourceLabel('Bộ dữ liệu mẫu'); setSyncedAt('');
     void clearDataset();
@@ -78,7 +80,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
     window.localStorage.setItem('dynamo-theme', next);
   };
   const logout = () => {
-    window.localStorage.removeItem('dynamo-user'); window.localStorage.removeItem('dynamo-role');
+    window.localStorage.removeItem('dynamo-user'); window.localStorage.removeItem('dynamo-role'); window.localStorage.removeItem('dynamo-code');
     navigate({ to: '/login' });
   };
   const vendor = getVendorScope(role);
@@ -88,7 +90,7 @@ export function DynamoShell({ children }: { children: ReactNode }) {
   const current = nav.find(n => n.to === location.pathname);
   const dateLabel = now ? now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '--/--/----';
   const timeLabel = now ? now.toLocaleTimeString('vi-VN', { hour12: false }) : '--:--:--';
-  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered, dataset, sourceLabel, syncedAt, isLive, applyDataset, resetDataset, role }}>
+  return <AppContext.Provider value={{ workshop, setWorkshop, search, setSearch, filtered, dataset, sourceLabel, syncedAt, isLive, applyDataset, resetDataset, role, updateItem }}>
     <div className="min-h-screen bg-background text-foreground lg:flex">
       {mobileOpen && <div className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={() => setMobileOpen(false)} />}
       <aside className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-screen ${collapsed ? 'lg:w-[80px]' : 'lg:w-[248px]'} ${mobileOpen ? 'w-[248px] translate-x-0' : 'w-[248px] -translate-x-full lg:translate-x-0'}`}>
