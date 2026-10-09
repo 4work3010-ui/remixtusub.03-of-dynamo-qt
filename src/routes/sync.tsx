@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeading, useDynamo } from '@/components/dynamo-shell';
 import { WebhookConfig } from '@/components/webhook-config';
 import { items as sampleItems, money, number, type QTItem } from '@/lib/dynamo-data';
-import { SHEET_URL, fetchSheetItems, mapRows, parseCsvRows } from '@/lib/dynamo-source';
+import { SHEET_URL, fetchSheetItems, mapRows, parseCsvRows, type MapResult } from '@/lib/dynamo-source';
 
 export const Route = createFileRoute('/sync')({ head: () => ({ meta: [{ title: 'Nạp CSV & Đồng bộ | DYNAMO VIETNAM QT - MES' }, { name: 'description', content: 'Nạp tệp CSV hoặc đồng bộ trực tiếp từ Google Sheets công khai vào hệ thống luân chuyển QT.' }, { property: 'og:title', content: 'Nạp CSV & Đồng bộ | DYNAMO VIETNAM QT - MES' }, { property: 'og:description', content: 'Đồng bộ dữ liệu gia công QT từ CSV hoặc Google Sheets.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }), component: Sync });
 
@@ -21,10 +21,12 @@ function Sync() {
   const [label, setLabel] = useState('');
   const [rows, setRows] = useState<QTItem[]>([]);
   const [skipped, setSkipped] = useState(0);
+  const [stats, setStats] = useState<MapResult | null>(null);
+  const [mode, setMode] = useState<'replace' | 'merge'>('replace');
   const [applied, setApplied] = useState(false);
 
-  const stage = (result: { items: QTItem[]; skipped: number }, name: string) => {
-    setRows(result.items); setSkipped(result.skipped); setLabel(name); setApplied(false); setError('');
+  const stage = (result: MapResult, name: string) => {
+    setStats(result); setRows(result.items); setSkipped(result.skipped); setLabel(name); setApplied(false); setError('');
   };
 
   const syncSheet = async () => {
@@ -95,8 +97,18 @@ function Sync() {
             <div className="border border-border p-3"><p className="text-[10px] text-muted-foreground">TỔNG CHI PHÍ</p><p className="mt-1 font-display text-sm font-bold">{money(totalCost)}</p></div>
           </div>
           <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">{byWorkshop.map(x => <span key={x.w} className="border border-border bg-secondary px-2 py-1">{x.w}: <b className="text-foreground">{number(x.n)}</b></span>)}</div>
+          {stats && (() => { const ids = new Set(dataset.map(i => i.ID_Key)); const upd = rows.filter(r => ids.has(r.ID_Key)).length; const notes = [
+            mode === 'merge' && `Sẽ thêm mới ${number(rows.length - upd)} lô, cập nhật ${number(upd)} lô đang có.`,
+            mode === 'replace' && `Sẽ thay toàn bộ ${number(dataset.length)} lô hiện tại bằng ${number(rows.length)} lô mới.`,
+            stats.skipped > 0 && `${number(stats.skipped)} dòng bị bỏ qua vì thiếu ID_Key, ma_hang hoặc So_DatHang.`,
+            stats.duplicates.length > 0 && `${number(stats.duplicates.length)} dòng trùng ID_Key bị bỏ qua (giữ dòng đầu): ${stats.duplicates.slice(0, 5).join(', ')}${stats.duplicates.length > 5 ? '…' : ''}.`,
+            stats.unknownStatus.length > 0 && `${number(stats.unknownStatus.length)} dòng có TrangThai lạ, tạm xếp "Chờ xuất xưởng": ${stats.unknownStatus.slice(0, 3).join('; ')}. Hãy sửa trên Sheet.`,
+            stats.badDates > 0 && `${number(stats.badDates)} dòng có ngày sai định dạng (dùng MM/DD/YYYY hoặc YYYY-MM-DD).`,
+            stats.estimatedDue > 0 && `${number(stats.estimatedDue)} dòng không có cột han_tra — hạn trả đang tạm tính ngày gửi + 7 ngày và được đánh dấu "ước tính".`,
+          ].filter(Boolean) as string[]; return <ul className="mt-3 space-y-1 border border-warning/40 bg-warning/10 p-3 text-[11px]">{notes.map(n => <li key={n}>• {n}</li>)}</ul>; })()}
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            <Button onClick={() => { applyDataset(rows, label === 'Google Sheets' ? 'Google Sheets' : `Tệp ${label}`); setApplied(true); }} className="font-bold"><CheckCircle2 size={15} /> {applied ? 'Đã áp dụng' : 'Áp dụng vào toàn hệ thống'}</Button>
+            <span className="flex border border-border text-xs">{(['replace', 'merge'] as const).map(m => <button key={m} onClick={() => { setMode(m); setApplied(false); }} className={`px-3 py-2 font-semibold ${mode === m ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground'}`}>{m === 'replace' ? 'Thay thế toàn bộ' : 'Cập nhật theo mã lô'}</button>)}</span>
+            <Button onClick={() => { const name = label === 'Google Sheets' ? 'Google Sheets' : `Tệp ${label}`; if (mode === 'merge') { const map = new Map(dataset.map(i => [i.ID_Key, i])); for (const r of rows) map.set(r.ID_Key, r); applyDataset([...map.values()], name); } else applyDataset(rows, name); setApplied(true); }} className="font-bold"><CheckCircle2 size={15} /> {applied ? 'Đã áp dụng' : 'Áp dụng vào toàn hệ thống'}</Button>
             {isLive && <Button variant="outline" onClick={() => { resetDataset(); setApplied(false); }}><RotateCcw size={15} /> Về bộ mẫu 12 dòng</Button>}
           </div>
           {applied && <p className="mt-3 text-xs font-semibold text-primary">Toàn bộ màn hình Tổng quan, Đơn hàng, Luân chuyển và Đối soát đã dùng dữ liệu này.</p>}
