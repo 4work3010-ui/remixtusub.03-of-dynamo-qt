@@ -1,11 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { LotUpdateButton } from '@/components/lot-update-dialog';
+import { auditFor, failedSyncIds } from '@/lib/dynamo-workflow';
 import { ArrowRight, ChevronLeft, ChevronRight, CircleAlert, Download, GanttChart, PackageOpen, Table2, X } from 'lucide-react';
 import { PageHeading, useDynamo } from '@/components/dynamo-shell';
 import { date, daysLate, isLate, money, number, statuses, type QTItem } from '@/lib/dynamo-data';
 
 export const Route = createFileRoute('/tracking')({
   head: () => ({ meta: [{ title: 'Luân chuyển QT | DYNAMO VIETNAM QT - MES' }, { name: 'description', content: 'Timeline giám sát lô gia công theo đơn hàng từ xuất xưởng đến nhập kho.' }, { property: 'og:title', content: 'Luân chuyển QT | DYNAMO VIETNAM QT - MES' }, { property: 'og:description', content: 'Theo dõi tiến độ và cảnh báo quá hạn gia công ngoài.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
+  validateSearch: (s: Record<string, unknown>): { focus?: Focus } => (FOCUS.some(f => f.key === s['focus']) ? { focus: s['focus'] as Focus } : {}),
   component: Tracking,
 });
 
@@ -16,6 +19,13 @@ const PRIORITIES: { key: Priority; label: string; dot: string; chip: string }[] 
   { key: 'due_soon', label: 'Cận hạn trong 48h', dot: 'bg-info', chip: 'border-info/40 bg-info/10 text-info' },
   { key: 'on_track', label: 'Đúng hạn (đang chạy)', dot: 'bg-primary', chip: 'border-primary/40 bg-primary/10 text-primary' },
   { key: 'done', label: 'Đã nhập kho', dot: 'bg-muted-foreground', chip: 'border-border bg-secondary text-muted-foreground' },
+];
+type Focus = 'overdue' | 'due_soon' | 'est_due' | 'sync_failed';
+const FOCUS: { key: Focus; label: string; tone: string }[] = [
+  { key: 'overdue', label: 'Quá hạn', tone: 'border-destructive/40 bg-destructive/10 text-destructive' },
+  { key: 'due_soon', label: 'Cận hạn 48h', tone: 'border-warning/40 bg-warning/10 text-warning' },
+  { key: 'est_due', label: 'Hạn trả ước tính', tone: 'border-border bg-secondary text-muted-foreground' },
+  { key: 'sync_failed', label: 'Ghi Sheet lỗi', tone: 'border-warning/40 bg-warning/10 text-warning' },
 ];
 const PAGE_SIZES = [10, 30, 50, 100];
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -33,7 +43,15 @@ function priorityOf(row: QTItem): Priority {
 const RANK: Record<Priority, number> = { critical: 0, warning: 1, due_soon: 2, on_track: 3, done: 4 };
 
 function Tracking() {
-  const { filtered } = useDynamo();
+  const { filtered: all } = useDynamo();
+  const search = Route.useSearch();
+  const [focus, setFocus] = useState<Focus | null>(search.focus ?? null);
+  const [failed, setFailed] = useState<Set<string>>(new Set());
+  useEffect(() => { const f = () => setFailed(failedSyncIds()); f(); window.addEventListener('dynamo-audit', f); return () => window.removeEventListener('dynamo-audit', f); }, []);
+  useEffect(() => { setFocus(search.focus ?? null); }, [search.focus]);
+  const inFocus = (r: QTItem, f: Focus) => f === 'overdue' ? isLate(r) : f === 'due_soon' ? priorityOf(r) === 'due_soon' : f === 'est_due' ? !!r.han_tra_est && r.TrangThai !== 'Đã nhập kho' : failed.has(r.ID_Key);
+  const focusCounts = useMemo(() => Object.fromEntries(FOCUS.map(f => [f.key, all.filter(r => inFocus(r, f.key)).length])) as Record<Focus, number>, [all, failed]);
+  const filtered = useMemo(() => (focus ? all.filter(r => inFocus(r, focus)) : all), [all, focus, failed]);
   const [view, setView] = useState<'timeline' | 'table'>('timeline');
   const [orderLimit, setOrderLimit] = useState(30);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -122,6 +140,11 @@ function Tracking() {
         }
       />
 
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px]">
+        <span className="font-semibold text-muted-foreground">Cần xử lý:</span>
+        {FOCUS.map(f => <button key={f.key} onClick={() => { setFocus(v => v === f.key ? null : f.key); setShown({}); setTablePage(0); }} aria-pressed={focus === f.key} className={`border px-2.5 py-1 font-semibold ${f.tone} ${focus === f.key ? 'ring-2 ring-ring' : ''}`}>{f.label} <b className="font-mono">{number(focusCounts[f.key])}</b></button>)}
+        {focus && <button onClick={() => setFocus(null)} className="flex items-center gap-1 text-muted-foreground underline"><X size={12} />Bỏ lọc</button>}
+      </div>
       <div className="mb-4 flex flex-wrap items-center gap-2 border border-border bg-card px-3 py-2">
         <details className="relative">
           <summary className="flex cursor-pointer list-none items-center gap-1.5 border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium">
@@ -272,6 +295,12 @@ function Tracking() {
             <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
               {([['Mã lô', detail.ID_Key], ['Phân xưởng', detail.phong_sx], ['Kích thước SP', detail.Kich_Thuoc_SP], ['Mác thép', detail.vat_lieu], ['Độ cứng', detail.do_cung], ['Số lượng / Kg', `${number(detail.so_luong)} pcs · ${number(detail.kg_Lot, 1)} kg`], ['Đơn giá', `${money(detail.don_gia)}/${detail.don_vi_tinh}`], ['Thành tiền', money(detail.thanh_tien)], ['Nhà thầu', detail.cty_QT], ['Trạng thái', detail.TrangThai], ['Ngày gửi', date(detail.ngay_gui_QT)], ['Hạn trả', date(detail.han_tra)], ['Ngày nhận', detail.ngay_nhan ? date(detail.ngay_nhan) : '—'], ['Trễ hạn', isLate(detail) ? `${daysLate(detail.han_tra)} ngày` : '—']] as const).map(([k, v]) => <div key={k}><dt className="text-[10px] font-bold text-muted-foreground">{k}</dt><dd className="mt-0.5 font-semibold">{v}</dd></div>)}
             </dl>
+            {(() => { const live = all.find(r => r.ID_Key === detail.ID_Key) ?? detail; const log = auditFor(detail.ID_Key); return <>
+              {live.han_tra_est && <p className="mt-3 text-[11px] text-warning">Hạn trả là ước tính (ngày gửi + 7 ngày) vì nguồn chưa có cột han_tra.</p>}
+              <div className="mt-4 flex items-center justify-between border-t border-border pt-3"><span className="text-xs font-semibold">Trạng thái: {live.TrangThai}</span><LotUpdateButton key={live.TrangThai + live.ngay_nhan} item={live} /></div>
+              <h4 className="mt-4 text-xs font-bold">Lịch sử thay đổi trên máy này</h4>
+              {log.length ? <ol className="mt-2 max-h-48 space-y-2 overflow-y-auto text-[11px]">{log.map(e => <li key={e.id} className="border-l-2 border-border pl-2"><b>{new Date(e.at).toLocaleString('vi-VN')}</b> · {e.user} ({e.role}) — {e.result === 'ok' ? 'Đã ghi Sheet' : <span className="text-destructive">Ghi Sheet lỗi: {e.error}</span>}<br />{Object.entries(e.changes).map(([k, [a, b]]) => `${k}: ${a || '—'} → ${b || '—'}`).join('; ')}{e.reason && <><br />Lý do: {e.reason}</>}</li>)}</ol> : <p className="mt-1 text-[11px] text-muted-foreground">Chưa có thay đổi nào được ghi nhận.</p>}
+            </>; })()}
           </div>
         </div>
       )}

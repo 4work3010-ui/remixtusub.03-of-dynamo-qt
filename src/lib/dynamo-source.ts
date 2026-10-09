@@ -77,16 +77,19 @@ const statusMap: Record<string, Status> = {
   'Đã nhập kho': 'Đã nhập kho',
 };
 
-export type MapResult = { items: QTItem[]; total: number; skipped: number };
+export type MapResult = { items: QTItem[]; total: number; skipped: number; duplicates: string[]; unknownStatus: string[]; estimatedDue: number; badDates: number };
 
 export function mapRows(rows: Record<string, string>[]): MapResult {
   const items: QTItem[] = [];
-  let skipped = 0;
+  let skipped = 0; let estimatedDue = 0; let badDates = 0;
+  const seen = new Set<string>(); const duplicates: string[] = []; const unknownStatus: string[] = [];
   for (const r of rows) {
     const ID_Key = (r['ID_Key'] ?? '').trim();
     const ma_hang = (r['ma_hang'] ?? '').trim();
     const So_DatHang = (r['So_DatHang'] ?? '').trim();
     if (!ID_Key || !ma_hang || !So_DatHang) { skipped++; continue; }
+    if (seen.has(ID_Key)) { duplicates.push(ID_Key); continue; }
+    seen.add(ID_Key);
     const phong_sx = ((r['phong_sx'] ?? '').trim().toUpperCase() || 'PIN') as Workshop;
     const ngay_gui_QT = toIsoDate(r['ngay_gui_QT']) || toIsoDate(r['ngay_tao']);
     const ngay_nhan = toIsoDate(r['ngay_nhan_QT']);
@@ -96,6 +99,10 @@ export function mapRows(rows: Record<string, string>[]): MapResult {
     const don_vi_tinh = (r['don_vi_tinh'] ?? '').trim().toLowerCase() === 'kg' ? 'Kg' : 'pcs';
     const thanh_tien = num(r['thanh_tien']) || Math.round((don_vi_tinh === 'Kg' ? kg_Lot : so_luong) * don_gia);
     const raw = (r['TrangThai'] ?? '').trim();
+    if (raw && !statusMap[raw]) unknownStatus.push(`${ID_Key}: "${raw}"`);
+    if ((r['ngay_gui_QT'] && !toIsoDate(r['ngay_gui_QT'])) || (r['ngay_nhan_QT'] && !ngay_nhan)) badDates++;
+    const srcDue = toIsoDate(r['han_tra']);
+    if (!srcDue) estimatedDue++;
     const TrangThai: Status = ngay_nhan ? 'Đã nhập kho' : (statusMap[raw] ?? 'Chờ xuất xưởng');
     items.push({
       ID_Key, phong_sx,
@@ -107,12 +114,13 @@ export function mapRows(rows: Record<string, string>[]): MapResult {
       kg_Lot, don_vi_tinh, don_gia, thanh_tien,
       ngay_gui_QT, cty_QT: ((r['cty_QT'] ?? '').trim().toUpperCase() || 'YAMAICHI') as Vendor,
       TrangThai, So_DatHang,
-      han_tra: addDays(ngay_gui_QT, 7),
+      han_tra: srcDue || addDays(ngay_gui_QT, 7),
+      han_tra_est: !srcDue,
       ngay_nhan: ngay_nhan || undefined,
       cong_doan: (r['loai_hang'] ?? '').trim() || 'Nhiệt luyện',
     });
   }
-  return { items, total: rows.length, skipped };
+  return { items, total: rows.length, skipped, duplicates, unknownStatus, estimatedDue, badDates };
 }
 
 export async function fetchSheetItems(url: string): Promise<MapResult> {
