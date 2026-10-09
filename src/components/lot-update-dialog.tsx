@@ -31,10 +31,10 @@ export function LotUpdateButton({ item }: { item: QTItem }) {
     if (d.status !== item.TrangThai && !confirm) { setConfirm(true); return; }
     setBusy(true);
     const changes: Record<string, [string, string]> = {};
-    if (d.status !== item.TrangThai) changes.TrangThai = [item.TrangThai, d.status];
-    if (d.ngay_nhan !== (item.ngay_nhan ?? '')) changes.ngay_nhan_QT = [item.ngay_nhan ?? '', d.ngay_nhan];
+    if (d.status !== item.TrangThai) changes['TrangThai'] = [item.TrangThai, d.status];
+    if (d.ngay_nhan !== (item.ngay_nhan ?? '')) changes['ngay_nhan_QT'] = [item.ngay_nhan ?? '', d.ngay_nhan];
     const oldHrc = item.do_cung === '—' ? '' : item.do_cung;
-    if (d.do_cung.trim() !== oldHrc) changes.do_cung = [oldHrc, d.do_cung.trim()];
+    if (d.do_cung.trim() !== oldHrc) changes['do_cung'] = [oldHrc, d.do_cung.trim()];
     if (!Object.keys(changes).length) { setBusy(false); setErrs(['Chưa có thay đổi nào để lưu.']); return; }
     const res = await updateLotProgress({ data: {
       code: window.localStorage.getItem('dynamo-code') ?? '', webhook: window.localStorage.getItem('dynamo-webhook') ?? '',

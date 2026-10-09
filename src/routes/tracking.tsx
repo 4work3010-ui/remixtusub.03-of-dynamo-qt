@@ -8,7 +8,7 @@ import { date, daysLate, isLate, money, number, statuses, type QTItem } from '@/
 
 export const Route = createFileRoute('/tracking')({
   head: () => ({ meta: [{ title: 'Luân chuyển QT | DYNAMO VIETNAM QT - MES' }, { name: 'description', content: 'Timeline giám sát lô gia công theo đơn hàng từ xuất xưởng đến nhập kho.' }, { property: 'og:title', content: 'Luân chuyển QT | DYNAMO VIETNAM QT - MES' }, { property: 'og:description', content: 'Theo dõi tiến độ và cảnh báo quá hạn gia công ngoài.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
-  validateSearch: (s: Record<string, unknown>): { focus?: Focus } => (FOCUS.some(f => f.key === s.focus) ? { focus: s.focus as Focus } : {}),
+  validateSearch: (s: Record<string, unknown>): { focus?: Focus } => (FOCUS.some(f => f.key === s['focus']) ? { focus: s['focus'] as Focus } : {}),
   component: Tracking,
 });
 
