@@ -92,7 +92,7 @@ function Sync() {
         {error && <p role="alert" className="mb-4 flex gap-2 border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive"><AlertCircle size={15} className="shrink-0" />{error}</p>}
         {rows.length > 0 ? <>
           <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-            <div className="border border-border p-3"><p className="text-[10px] text-muted-foreground">DÒNG HỢP LỆ{stats?` / ${number(rows.length+stats.skipped+stats.duplicates.length)} nguồn`:''}</p><p className="mt-1 font-display text-lg font-bold">{number(rows.length)}</p></div>
+            <div className="border border-border p-3"><p className="text-[10px] text-muted-foreground">DÒNG HỢP LỆ{stats?` / ${number(stats.total)} nguồn`:''}</p><p className="mt-1 font-display text-lg font-bold">{number(rows.length)}</p></div>
             <div className="border border-border p-3"><p className="text-[10px] text-muted-foreground">BỎ QUA</p><p className="mt-1 font-display text-lg font-bold">{number(skipped)}</p></div>
             <div className="border border-border p-3"><p className="text-[10px] text-muted-foreground">SỐ ĐƠN QT</p><p className="mt-1 font-display text-lg font-bold">{number(new Set(rows.map(i => i.So_DatHang)).size)}</p></div>
             <div className="border border-border p-3"><p className="text-[10px] text-muted-foreground">TỔNG CHI PHÍ</p><p className="mt-1 font-display text-sm font-bold">{money(totalCost)}</p></div>
