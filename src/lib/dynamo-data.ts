@@ -31,5 +31,6 @@ export const money = (value: number) => isPricingVisible() ? new Intl.NumberForm
 export const number = (value: number, decimals = 0) => new Intl.NumberFormat('vi-VN', { maximumFractionDigits: decimals }).format(value);
 export const date = (value: string) => new Date(value + 'T00:00:00').toLocaleDateString('vi-VN');
 export const daysLate = (value: string) => Math.max(0, Math.floor((new Date().setHours(0,0,0,0) - new Date(value + 'T00:00:00').getTime()) / 86400000));
-export const isLate = (row: QTItem) => row.TrangThai !== 'Đã nhập kho' && daysLate(row.han_tra) > 0;
+/** Overdue only when the due date is official (not estimated). Kept in sync with dynamo-rules.isOverdue. */
+export const isLate = (row: QTItem) => row.TrangThai !== 'Đã nhập kho' && !row.han_tra_est && /^\d{4}-\d{2}-\d{2}$/.test(row.han_tra) && daysLate(row.han_tra) > 0;
 export const orderIds = [...new Set(items.map(i => i.So_DatHang))];
