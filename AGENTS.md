@@ -19,3 +19,4 @@
 - Mount <Toaster> as the first child of <body> in __root before children; toasts fired during shell-hydration effects are silently dropped when Toaster hydrates after the shell.
 - Vendor write-back: updateLotProgress server fn re-verifies the ULID (stored as dynamo-code) and whitelists fields before posting to the Apps Script webhook; whitelist lives in auth.functions.ts so admins can open more columns in one place.
 - Lot status transitions, update validation and the per-device audit log live in src/lib/dynamo-workflow.ts; every screen that changes a lot must go through LotUpdateButton so rules stay consistent.
+- Overdue/due-soon/missing-due/on-time and the logistics vs QC split live in src/lib/dynamo-rules.ts; Dashboard and Tracking must both use it so a lot is classified the same on every screen.
