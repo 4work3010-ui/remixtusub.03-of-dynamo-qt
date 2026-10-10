@@ -19,7 +19,9 @@ type AppContextType = {
   resetDataset: () => void;
   updateItem: (id: string, patch: Partial<QTItem>) => void;
 };
-const AppContext = createContext<AppContextType | null>(null);
+// Keep one context instance across hot reloads; a re-created context leaves pages reading an empty provider.
+const g = globalThis as { __dynamoCtx?: React.Context<AppContextType | null> };
+const AppContext = (g.__dynamoCtx ??= createContext<AppContextType | null>(null));
 export function useDynamo() { const context = useContext(AppContext); if (!context) throw new Error('Dynamo context missing'); return context; }
 const nav: { to: '/dashboard' | '/orders' | '/tracking' | '/audit-costs' | '/materials' | '/sync'; label: string; icon: typeof LayoutDashboard; section?: string }[] = [
   { to: '/dashboard', label: 'TỔNG QUAN', icon: LayoutDashboard, section: 'ĐIỀU HÀNH' },
