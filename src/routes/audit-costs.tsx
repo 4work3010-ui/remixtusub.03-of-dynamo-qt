@@ -8,7 +8,7 @@ export const Route = createFileRoute('/audit-costs')({head:()=>({meta:[{title:'Ä
 const THRESHOLD = 0.05;
 type Verdict = 'flag' | 'ok' | 'insufficient';
 type Group = { key: string; vendor: string; grade: string; unit: string; rows: QTItem[]; valid: QTItem[]; invalid: number; ref: number | null; maxDev: number | null; qty: number; verdict: Verdict };
-const median = (v: number[]) => { if (!v.length) return null; const s = [...v].sort((a, b) => a - b); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const median = (v: number[]): number | null => { if (!v.length) return null; const s = [...v].sort((a, b) => a - b); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2; };
 // Billing basis per source definition: Kg -> kg_Lot, pcs -> so_luong. Units never mix.
 const qtyOf = (r: QTItem) => r.don_vi_tinh === 'Kg' ? r.kg_Lot : r.so_luong;
 
@@ -23,7 +23,7 @@ function Audit() {
       const ref = valid.length >= 2 ? median(valid.map(r => r.don_gia)) : null;
       const maxDev = ref ? Math.max(...valid.map(r => Math.abs(r.don_gia - ref) / ref)) : null;
       const verdict: Verdict = ref === null ? 'insufficient' : maxDev! > THRESHOLD ? 'flag' : 'ok';
-      return { key, vendor: rows[0].cty_QT, grade: rows[0].vat_lieu, unit: rows[0].don_vi_tinh, rows, valid, invalid: rows.length - valid.length, ref, maxDev, qty: rows.reduce((a, r) => a + qtyOf(r), 0), verdict };
+      return { key, vendor: rows[0]!.cty_QT, grade: rows[0]!.vat_lieu, unit: rows[0]!.don_vi_tinh, rows, valid, invalid: rows.length - valid.length, ref, maxDev, qty: rows.reduce((a, r) => a + qtyOf(r), 0), verdict };
     }).sort((a, b) => ({ flag: 0, insufficient: 1, ok: 2 }[a.verdict] - { flag: 0, insufficient: 1, ok: 2 }[b.verdict]) || a.vendor.localeCompare(b.vendor));
   }, [filtered]);
   const total = filtered.reduce((a, i) => a + (Number.isFinite(i.thanh_tien) ? i.thanh_tien : 0), 0);
