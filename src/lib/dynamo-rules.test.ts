@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { items } from './dynamo-data';
+import { items, type QTItem } from './dynamo-data';
 import { isDueSoon, isOverdue, logisticsOf, onTimeRate, qcOf } from './dynamo-rules';
 
 const now = new Date('2026-10-10T09:00:00');
-const base = { ...items[0], TrangThai: 'Đang tại Vendor' as const, han_tra: '2026-10-05' };
+const base: QTItem = { ...items[0]!, TrangThai: 'Đang tại Vendor' as const, han_tra: '2026-10-05' };
 
 describe('dynamo rules', () => {
   it('legacy Kiểm tra QC maps to logistics at vendor and QC in progress', () => {
