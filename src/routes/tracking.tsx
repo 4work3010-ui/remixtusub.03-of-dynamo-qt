@@ -105,7 +105,7 @@ function Tracking() {
   }, [enriched]);
 
   const vendors = useMemo(() => [...new Set(all.map(i => String(i.cty_QT)))].sort(), [all]);
-  const lateCount = useMemo(() => rows.filter(isOverdue).length, [rows]);
+  const lateCount = useMemo(() => rows.filter((r) => isOverdue(r)).length, [rows]);
   const totalKg = useMemo(() => rows.reduce((a, i) => a + i.kg_Lot, 0), [rows]);
 
   const toggle = (p: Priority) => { setPicked((v) => (v.includes(p) ? v.filter((x) => x !== p) : [...v, p])); setShown({}); setTablePage(0); };
@@ -224,7 +224,7 @@ function Tracking() {
             </div>
             {visible.length ? visible.map((g) => {
               const open = !collapsed[g.id];
-              const late = g.lots.filter(isOverdue).length;
+              const late = g.lots.filter((l) => isOverdue(l)).length;
               return (
                 <div key={g.id} className="border-b border-border">
                   <button onClick={() => setCollapsed((c) => ({ ...c, [g.id]: open }))} className="grid w-full grid-cols-[minmax(220px,300px)_1fr] bg-secondary/40 text-left hover:bg-secondary">
