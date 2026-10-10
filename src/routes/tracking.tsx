@@ -193,7 +193,12 @@ function Tracking() {
             <button onClick={() => shiftMonth(1)} aria-label="Tháng sau" className="border border-border bg-background p-1.5 text-muted-foreground"><ChevronRight size={14} /></button>
           </>
         )}
-        {(picked.length > 0 || from || to) && <button onClick={() => { reset(); setRange('all'); }} className="flex items-center gap-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"><X size={12} /> Xóa lọc</button>}
+        <select aria-label="Vendor" value={vendor} onChange={(e) => { setVendor(e.target.value); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1.5 text-[11px]"><option value="all">Tất cả vendor</option>{vendors.map(v => <option key={v}>{v}</option>)}</select>
+        <select aria-label="Logistics" value={logi} onChange={(e) => { setLogi(e.target.value as Logistics); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1.5 text-[11px]"><option value="all">Logistics: tất cả</option>{(['Chờ xuất xưởng', 'Đang tại Vendor', 'Đã nhập kho'] as Logistics[]).map(l => <option key={l}>{l}</option>)}</select>
+        <select aria-label="QC" value={qc} onChange={(e) => { setQc(e.target.value as QcState); setShown({}); setTablePage(0); }} className="border border-border bg-background px-2 py-1.5 text-[11px]"><option value="all">QC: tất cả</option>{(['Chưa kiểm tra', 'Đang kiểm tra', 'Đạt', 'Không đạt'] as QcState[]).map(q => <option key={q}>{q}</option>)}</select>
+        <label className="flex items-center gap-1.5 border border-border bg-background px-2 py-1.5 text-[11px]"><input type="checkbox" checked={missDue} onChange={(e) => { setMissDue(e.target.checked); setTablePage(0); }} />Thiếu hạn trả</label>
+        <select aria-label="Sắp xếp" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="border border-border bg-background px-2 py-1.5 text-[11px]"><option value="priority">Sắp xếp: ưu tiên</option><option value="han_tra">Sắp xếp: hạn trả</option><option value="ID_Key">Sắp xếp: mã lô</option></select>
+        {(picked.length > 0 || from || to || vendor !== 'all' || logi !== 'all' || qc !== 'all' || missDue) && <button onClick={() => { reset(); setRange('all'); }} className="flex items-center gap-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"><X size={12} /> Xóa lọc</button>}
       </div>
 
       <div className="mb-5 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
