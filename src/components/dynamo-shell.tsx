@@ -25,7 +25,7 @@ const nav: { to: '/dashboard' | '/orders' | '/tracking' | '/audit-costs' | '/mat
   { to: '/dashboard', label: 'TỔNG QUAN', icon: LayoutDashboard, section: 'ĐIỀU HÀNH' },
   { to: '/orders', label: 'ĐƠN ĐẶT HÀNG', icon: ClipboardList },
   { to: '/tracking', label: 'LUÂN CHUYỂN QT', icon: ArrowLeftRight },
-  { to: '/audit-costs', label: 'ĐỐI SOÁT CHI PHÍ', icon: ShieldCheck, section: 'QUẢN LÝ' },
+  { to: '/audit-costs', label: 'ĐỐI SOÁT CHI PHÍ', icon: ShieldCheck, section: 'KIỂM SOÁT' },
   { to: '/materials', label: 'MÁC THÉP', icon: Boxes },
   { to: '/sync', label: 'NẠP CSV / ĐỒNG BỘ', icon: DatabaseZap, section: 'HỆ THỐNG' },
 ] as const;
